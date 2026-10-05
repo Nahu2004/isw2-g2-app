@@ -2,3 +2,4 @@
 Grupo Nº2
 Integrantes: del Barco Nahuel, Figueroa Ignacio, De Napoli Franco, Scalia Nicolas
 Proyecto A: Liga Amateur
+Ignacio Figueroa: conectado
