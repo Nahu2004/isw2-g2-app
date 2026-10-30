@@ -51,7 +51,8 @@ export default function ReglamentoScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <GradientBackground>
+      <SafeAreaView style={styles.safeArea}>
       {/* Encabezado del módulo */}
       <View style={styles.header}>
         <Text style={styles.headerTitulo}>⚖️ Reglamento</Text>
@@ -85,7 +86,8 @@ export default function ReglamentoScreen() {
       >
         {renderContenido()}
       </ScrollView>
-    </SafeAreaView></GradientBackground>
+    </SafeAreaView>
+    </GradientBackground>
   );
 }
 
