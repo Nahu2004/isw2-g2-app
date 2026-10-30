@@ -2,13 +2,23 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card } from '@/components/common';
+import { Card, Button } from '@/components/common';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logoutUser } = useAuth();
 
-  const menuItems = [
+  const modulo2Items = [
+    {
+      title: 'Partido en Vivo',
+      desc: 'Control de ciclo de vida (RN-05), cronómetro y registro de goles y tarjetas (RN-04)',
+      route: '/partido-en-vivo?id=1',
+      icon: '🔴',
+      color: '#dc2626',
+    },
+  ];
+
+  const modulo3Items = [
     {
       title: 'Equipos',
       desc: 'Alta, edición y baja lógica de clubes por torneo',
@@ -42,18 +52,61 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.subtitle}>Panel de Administración</Text>
-        <Text style={styles.title}>Liga Amateur Santafesina</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.subtitle}>Panel Oficial</Text>
+            <Text style={styles.title}>Liga Amateur Santafesina</Text>
+          </View>
+          {user ? (
+            <TouchableOpacity
+              onPress={() => logoutUser()}
+              style={styles.logoutBtn}
+            >
+              <Text style={styles.logoutBtnText}>Salir</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => router.push('/auth/login' as any)}
+              style={styles.loginBtn}
+            >
+              <Text style={styles.loginBtnText}>Ingresar</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         <View style={styles.userBadge}>
           <Text style={styles.userText}>
-            👤 {user?.nombreCompleto || 'Administrador'} ({user?.rol || 'ADMIN'})
+            👤 {user ? `${user.nombreCompleto} (${user.rol})` : 'Invitado (Sin sesión activa)'}
           </Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Módulo 3: Administración de la Liga</Text>
+      {/* Módulo 2 */}
+      <Text style={styles.sectionTitle}>Módulo 2: Operación en Vivo</Text>
+      {modulo2Items.map((item) => (
+        <TouchableOpacity
+          key={item.route}
+          activeOpacity={0.8}
+          onPress={() => router.push(item.route as any)}
+        >
+          <Card style={styles.menuCard}>
+            <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
+              <Text style={styles.menuIcon}>{item.icon}</Text>
+            </View>
+            <View style={styles.menuInfo}>
+              <Text style={styles.itemTitle}>{item.title}</Text>
+              <Text style={styles.itemDesc}>{item.desc}</Text>
+            </View>
+            <Text style={styles.arrow}>❯</Text>
+          </Card>
+        </TouchableOpacity>
+      ))}
 
-      {menuItems.map((item) => (
+      {/* Módulo 3 */}
+      <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+        Módulo 3: Administración de la Liga
+      </Text>
+      {modulo3Items.map((item) => (
         <TouchableOpacity
           key={item.route}
           activeOpacity={0.8}
@@ -92,6 +145,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   subtitle: {
     fontSize: 13,
     color: '#0284c7',
@@ -104,6 +162,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#0f172a',
     marginTop: 2,
+  },
+  logoutBtn: {
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  logoutBtnText: {
+    color: '#b91c1c',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  loginBtn: {
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  loginBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
   },
   userBadge: {
     marginTop: 10,
@@ -129,6 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
+    marginBottom: 10,
   },
   iconContainer: {
     width: 46,

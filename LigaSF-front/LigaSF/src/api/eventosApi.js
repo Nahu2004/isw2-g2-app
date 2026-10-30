@@ -1,6 +1,4 @@
-import apiClient from './axiosClient';
+import { getEventosByPartido, registrarEvento, eliminarEvento } from './eventosService';
 
-export const getEventosByPartido = async (partidoId) => {
-  const response = await apiClient(`/partidos/${partidoId}/eventos`);
-  return response.json();
-};
+export { getEventosByPartido, registrarEvento, eliminarEvento };
+export default { getEventosByPartido, registrarEvento, eliminarEvento };

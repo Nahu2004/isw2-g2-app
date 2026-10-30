@@ -40,7 +40,11 @@ export interface Jugador {
   activo: boolean;
 }
 
+export type RolUsuarioType = 'ADMIN' | 'DELEGADO' | 'ARBITRO' | 'PLANILLERO' | 'ESPECTADOR';
+
 export type EstadoPartido = 'PROGRAMADO' | 'EN_JUEGO' | 'FINALIZADO' | 'SUSPENDIDO';
+
+export type TipoEvento = 'GOL' | 'AMARILLA' | 'ROJA';
 
 export interface Partido {
   id: number;
@@ -52,11 +56,40 @@ export interface Partido {
   equipoVisitanteId: number;
   nombreEquipoVisitante?: string;
   canchaId: number;
+  canchaNombre?: string;
   nombreCancha?: string;
   arbitroId: number;
+  arbitroNombre?: string;
   nombreArbitro?: string;
   fechaHoraInicio: string;
   estado: EstadoPartido;
   golesLocal?: number;
   golesVisitante?: number;
+}
+
+export interface EventoPartido {
+  id: number;
+  partidoId: number;
+  jugadorId: number;
+  jugadorNombreCompleto?: string;
+  equipoId?: number;
+  equipoNombre?: string;
+  tipo: TipoEvento;
+  minuto: number;
+}
+
+export interface LoginResponseData {
+  token: string;
+  tipo: string;
+  username: string;
+  nombreCompleto: string;
+  rol: 'ADMIN' | 'DELEGADO';
+}
+
+export interface ApiErrorResponse {
+  timestamp?: string;
+  status?: number;
+  error?: string;
+  message?: string;
+  mensaje?: string;
 }
