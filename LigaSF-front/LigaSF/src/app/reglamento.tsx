@@ -1,8 +1,8 @@
 // Pantalla principal del Módulo 4: Reglamento
-// Contiene 3 secciones accesibles por tabs internos:
+// Las 3 funcionalidades están implementadas:
 //   - Horarios:  Validar disponibilidad de cancha y árbitro (RN-01, RN-02) ✅
-//   - Sanciones: Lista de jugadores sancionados (RN-03)                     ✅ rama actual
-//   - Bloqueos:  Verificar si un jugador está bloqueado                     — próxima rama
+//   - Sanciones: Lista de jugadores sancionados (RN-03)                     ✅
+//   - Bloqueos:  Verificar si un jugador está bloqueado                     ✅
 
 import React, { useState } from 'react';
 import {
@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { ValidarHorarioForm } from '@/components/reglamento/ValidarHorarioForm';
 import { SancionesForm } from '@/components/reglamento/SancionesForm';
+import { BloqueoForm } from '@/components/reglamento/BloqueoForm';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -32,18 +33,6 @@ const TABS: Tab[] = [
   { id: 'bloqueos',  label: 'Bloqueos',  icono: '🚫' },
 ];
 
-// ─── Placeholder para funcionalidades no implementadas aún ───────────────────
-
-const ProximamenteView: React.FC<{ label: string }> = ({ label }) => (
-  <View style={styles.proximamente}>
-    <Text style={styles.proximamenteIcono}>🚧</Text>
-    <Text style={styles.proximamenteTitulo}>{label}</Text>
-    <Text style={styles.proximamenteTexto}>
-      Esta funcionalidad está en desarrollo.{'\n'}Se implementará en la siguiente rama.
-    </Text>
-  </View>
-);
-
 // ─── Pantalla principal ───────────────────────────────────────────────────────
 
 export default function ReglamentoScreen() {
@@ -56,7 +45,7 @@ export default function ReglamentoScreen() {
       case 'sanciones':
         return <SancionesForm />;
       case 'bloqueos':
-        return <ProximamenteView label="Bloqueo de jugadores" />;
+        return <BloqueoForm />;
     }
   };
 
@@ -163,28 +152,5 @@ const styles = StyleSheet.create({
   contenidoInner: {
     padding: 16,
     paddingBottom: 40,
-  },
-  // Placeholder
-  proximamente: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 60,
-  },
-  proximamenteIcono: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  proximamenteTitulo: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 8,
-  },
-  proximamenteTexto: {
-    fontSize: 14,
-    color: '#64748b',
-    textAlign: 'center',
-    lineHeight: 22,
   },
 });
