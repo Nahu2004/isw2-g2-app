@@ -1,7 +1,8 @@
-// Enums y constantes de dominio
+// Enums y constantes del negocio para la Liga Amateur Santafesina
 
 export const RolUsuario = Object.freeze({
   ADMIN: 'ADMIN',
+  DELEGADO: 'DELEGADO',
   ARBITRO: 'ARBITRO',
   PLANILLERO: 'PLANILLERO',
   ESPECTADOR: 'ESPECTADOR',
@@ -9,14 +10,19 @@ export const RolUsuario = Object.freeze({
 
 export const EstadoPartido = Object.freeze({
   PROGRAMADO: 'PROGRAMADO',
-  EN_CURSO: 'EN_CURSO',
+  EN_JUEGO: 'EN_JUEGO',
   FINALIZADO: 'FINALIZADO',
   SUSPENDIDO: 'SUSPENDIDO',
 });
 
 export const TipoEvento = Object.freeze({
   GOL: 'GOL',
-  TARJETA_AMARILLA: 'TARJETA_AMARILLA',
-  TARJETA_ROJA: 'TARJETA_ROJA',
-  CAMBIO: 'CAMBIO',
+  AMARILLA: 'AMARILLA',
+  ROJA: 'ROJA',
 });
+
+export default {
+  RolUsuario,
+  EstadoPartido,
+  TipoEvento,
+};

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   Alert,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { getPartidos, programarPartido, eliminarPartido } from '@/api/partidosApi';
 import { getTorneos } from '@/api/catalogosApi';
@@ -213,6 +214,14 @@ export default function PartidosScreen() {
                 </Text>
               </View>
 
+                            <View style={styles.actionRow}>
+                <Button
+                  title="🔴 Ver / Operar en Vivo"
+                  onPress={() => router.push(`/partido-en-vivo?id=${item.id}` as any)}
+                  style={styles.liveBtn}
+                />
+              </View>
+
               {item.estado === 'PROGRAMADO' && (
                 <View style={styles.actionRow}>
                   <Button
@@ -412,6 +421,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'flex-end',
+  },
+    liveBtn: {
+    backgroundColor: '#0284c7',
+    marginBottom: 8,
   },
   cancelBtn: {
     paddingVertical: 6,
