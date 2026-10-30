@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import {
 } from '@/api/jugadoresApi';
 import { getEquipos } from '@/api/equiposApi';
 import { Jugador, Equipo } from '@/api/types';
-import { LoadingView, ErrorView, EmptyView, Button } from '@/components/common';
+import { LoadingView, ErrorView, EmptyView, Button, GradientBackground } from '@/components/common';
 import { JugadorCard } from '@/components/jugadores/JugadorCard';
 import { JugadorFormModal } from '@/components/jugadores/JugadorFormModal';
 
@@ -107,7 +107,7 @@ export default function JugadoresScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <GradientBackground><View style={styles.container}>
       {/* Filtros */}
       <View style={styles.filterCard}>
         <View style={styles.filterHeader}>
@@ -188,7 +188,7 @@ export default function JugadoresScreen() {
         jugadorEditar={jugadorEditar}
         equipoIdDefault={equipoSeleccionado}
       />
-    </View>
+    </View></GradientBackground>
   );
 }
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -15,7 +16,7 @@ import { partidosService } from '@/api/partidosService';
 import { eventosService } from '@/api/eventosService';
 import { jugadoresService } from '@/api/jugadoresService';
 import { Partido, EventoPartido, Jugador, EstadoPartido, TipoEvento } from '@/api/types';
-import { Card, Button, EstadoBadge, ConfirmationModal } from '@/components/common';
+import { Card, Button, EstadoBadge, ConfirmationModal, GradientBackground } from '@/components/common';
 import { RegistrarEventoModal } from './RegistrarEventoModal';
 import { EventosTimeline } from './EventosTimeline';
 
@@ -29,28 +30,21 @@ export const PartidoEnVivoPage: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
 
-  // ID de partido desde query params (ej: /partido-en-vivo?id=5) o fallback 1
   const partidoId = params.id ? parseInt(params.id as string, 10) : 1;
 
-  // Estado del partido y eventos
   const [partido, setPartido] = useState<Partido | null>(null);
   const [eventos, setEventos] = useState<EventoPartido[]>([]);
   const [jugadoresLocal, setJugadoresLocal] = useState<Jugador[]>([]);
   const [jugadoresVisitante, setJugadoresVisitante] = useState<Jugador[]>([]);
 
-  // Estados de carga
   const [cargando, setCargando] = useState<boolean>(true);
   const [refrescando, setRefrescando] = useState<boolean>(false);
   const [procesandoEstado, setProcesandoEstado] = useState<boolean>(false);
   const [deletingEventoId, setDeletingEventoId] = useState<number | null>(null);
 
-  // Mensaje Toast / Banner informativo
   const [toast, setToast] = useState<ToastState | null>(null);
-
-  // Modal para registrar evento
   const [modalEventoVisible, setModalEventoVisible] = useState<boolean>(false);
 
-  // Modal confirmación para cambio de estado
   const [confirmEstadoModal, setConfirmEstadoModal] = useState<{
     visible: boolean;
     nuevoEstado: EstadoPartido | null;
@@ -65,7 +59,6 @@ export const PartidoEnVivoPage: React.FC = () => {
     esDestructivo: false,
   });
 
-  // Modal confirmación para eliminar incidencia
   const [confirmDeleteModal, setConfirmDeleteModal] = useState<{
     visible: boolean;
     evento: EventoPartido | null;
@@ -81,7 +74,6 @@ export const PartidoEnVivoPage: React.FC = () => {
     }, 4500);
   };
 
-  // Carga inicial y recarga
   const cargarDatos = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) setRefrescando(true);
@@ -95,7 +87,6 @@ export const PartidoEnVivoPage: React.FC = () => {
       setPartido(partidoData);
       setEventos(eventosData);
 
-      // Cargar planteles de ambos equipos para el select de incidencias (solo jugadores activos)
       if (partidoData?.equipoLocalId && partidoData?.equipoVisitanteId) {
         const [plantelLocal, plantelVisitante] = await Promise.all([
           jugadoresService.getJugadores(partidoData.equipoLocalId, true),
@@ -121,7 +112,6 @@ export const PartidoEnVivoPage: React.FC = () => {
     cargarDatos();
   }, [cargarDatos]);
 
-  // Recalcular goles a partir de la lista de eventos para actualización reactiva en pantalla
   const scoreCalculado = useMemo(() => {
     if (!partido) return { local: 0, visitante: 0 };
     let local = 0;
@@ -145,7 +135,6 @@ export const PartidoEnVivoPage: React.FC = () => {
   const partidoFinalizadoOSuspendido =
     partido?.estado === 'FINALIZADO' || partido?.estado === 'SUSPENDIDO';
 
-  // Manejo de cambio de estado (RN-05)
   const solicitarCambioEstado = (nuevoEstado: EstadoPartido) => {
     if (!partido) return;
 
@@ -204,7 +193,6 @@ export const PartidoEnVivoPage: React.FC = () => {
     }
   };
 
-  // Registro de nuevo evento
   const handleRegistrarEvento = async (datos: {
     jugadorId: number;
     tipo: TipoEvento;
@@ -217,7 +205,6 @@ export const PartidoEnVivoPage: React.FC = () => {
     cargarDatos(true);
   };
 
-  // Eliminación de evento (solo permitido si está EN_JUEGO)
   const solicitarEliminarEvento = (evento: EventoPartido) => {
     if (!partidoEnJuego) {
       Alert.alert(
@@ -257,282 +244,301 @@ export const PartidoEnVivoPage: React.FC = () => {
 
   if (cargando) {
     return (
-      <View style={styles.loadingCenter}>
-        <ActivityIndicator size="large" color="#0284c7" />
-        <Text style={styles.loadingText}>Cargando panel de partido en vivo...</Text>
-      </View>
+      <GradientBackground>
+        <View style={styles.loadingCenter}>
+          <ActivityIndicator size="large" color="#38bdf8" />
+          <Text style={styles.loadingText}>Conectando con la mesa de control en vivo...</Text>
+        </View>
+      </GradientBackground>
     );
   }
 
   if (!partido) {
     return (
-      <View style={styles.loadingCenter}>
-        <Text style={styles.emptyTitle}>Partido no encontrado</Text>
-        <Button title="Volver a Partidos" onPress={() => router.push('/partidos' as any)} />
-      </View>
+      <GradientBackground>
+        <View style={styles.loadingCenter}>
+          <Text style={styles.emptyTitle}>Partido no encontrado</Text>
+          <Button title="Volver a Partidos" onPress={() => router.push('/partidos' as any)} />
+        </View>
+      </GradientBackground>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl refreshing={refrescando} onRefresh={() => cargarDatos(true)} />
-      }
-    >
-      {/* Toast Alert */}
-      {toast && (
-        <View
-          style={[
-            styles.toast,
-            toast.type === 'error' && styles.toastError,
-            toast.type === 'success' && styles.toastSuccess,
-          ]}
-        >
-          <Text style={styles.toastIcon}>
-            {toast.type === 'error' ? '⚠️' : toast.type === 'success' ? '✅' : 'ℹ️'}
-          </Text>
-          <Text style={styles.toastText}>{toast.message}</Text>
-          <TouchableOpacity onPress={() => setToast(null)}>
-            <Text style={styles.toastClose}>✕</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Header Info */}
-      <View style={styles.topInfoRow}>
-        <TouchableOpacity
-          style={styles.backLink}
-          onPress={() => router.push('/partidos' as any)}
-        >
-          <Text style={styles.backLinkText}>← Lista de Partidos</Text>
-        </TouchableOpacity>
-        <View style={styles.userInfo}>
-          <Text style={styles.userRoleText}>
-            👤 {user?.nombreCompleto || user?.username} ({user?.rol})
-          </Text>
-        </View>
-      </View>
-
-      {/* Tarjeta de Marcador Central */}
-      <Card style={styles.scoreCard}>
-        <View style={styles.tournamentRow}>
-          <Text style={styles.tournamentName}>
-            🏆 {partido.nombreTorneo || 'Torneo Oficial'} - Fecha #{partido.numeroFecha}
-          </Text>
-          <EstadoBadge estado={partido.estado} />
-        </View>
-
-        {/* Marcador */}
-        <View style={styles.matchupContainer}>
-          <View style={styles.teamCol}>
-            <Text style={styles.teamBadgeIcon}>🛡️</Text>
-            <Text style={styles.teamNameText} numberOfLines={2}>
-              {partido.nombreEquipoLocal || `Local #${partido.equipoLocalId}`}
-            </Text>
-            <Text style={styles.teamSideLabel}>LOCAL</Text>
-          </View>
-
-          <View style={styles.scoreCenter}>
-            <View style={styles.scoreBoard}>
-              <Text style={styles.scoreNumber}>{scoreCalculado.local}</Text>
-              <Text style={styles.scoreDivider}>:</Text>
-              <Text style={styles.scoreNumber}>{scoreCalculado.visitante}</Text>
-            </View>
-            <View style={styles.liveClockBadge}>
-              <Text style={styles.liveClockDot}>●</Text>
-              <Text style={styles.liveClockText}>
-                {partido.estado === 'EN_JUEGO'
-                  ? 'EN VIVO'
-                  : partido.estado === 'FINALIZADO'
-                  ? 'FINAL'
-                  : partido.estado === 'SUSPENDIDO'
-                  ? 'SUSP'
-                  : 'PROG'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.teamCol}>
-            <Text style={styles.teamBadgeIcon}>🛡️</Text>
-            <Text style={styles.teamNameText} numberOfLines={2}>
-              {partido.nombreEquipoVisitante || `Visitante #${partido.equipoVisitanteId}`}
-            </Text>
-            <Text style={styles.teamSideLabel}>VISITANTE</Text>
-          </View>
-        </View>
-
-        {/* Metadatos: Cancha, Árbitro, Horario */}
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Text style={styles.metaLabel}>🏟️ Cancha</Text>
-            <Text style={styles.metaValue} numberOfLines={1}>
-              {partido.canchaNombre || partido.nombreCancha || `Cancha #${partido.canchaId}`}
-            </Text>
-          </View>
-
-          <View style={styles.metaItem}>
-            <Text style={styles.metaLabel}>🧑‍⚖️ Árbitro</Text>
-            <Text style={styles.metaValue} numberOfLines={1}>
-              {partido.arbitroNombre || partido.nombreArbitro || `Árbitro #${partido.arbitroId}`}
-            </Text>
-          </View>
-        </View>
-      </Card>
-
-      {/* Controles del Ciclo de Vida del Partido (RN-05) */}
-      <Card style={styles.lifecycleCard}>
-        <Text style={styles.sectionHeaderTitle}>Control de Ciclo de Vida (RN-05)</Text>
-        <Text style={styles.sectionHeaderSubtitle}>
-          Flujo permitido: PROGRAMADO ➔ EN JUEGO ➔ FINALIZADO (o SUSPENDIDO)
-        </Text>
-
-        <View style={styles.lifecycleButtons}>
-          {partido.estado === 'PROGRAMADO' && (
-            <>
-              <Button
-                title="▶️ Iniciar Partido"
-                onPress={() => solicitarCambioEstado('EN_JUEGO')}
-                loading={procesandoEstado}
-                style={styles.actionButton}
-              />
-              <Button
-                title="⚠️ Suspender"
-                variant="danger"
-                onPress={() => solicitarCambioEstado('SUSPENDIDO')}
-                loading={procesandoEstado}
-                style={styles.actionButton}
-              />
-            </>
-          )}
-
-          {partido.estado === 'EN_JUEGO' && (
-            <>
-              <Button
-                title="🏁 Finalizar Partido"
-                variant="primary"
-                onPress={() => solicitarCambioEstado('FINALIZADO')}
-                loading={procesandoEstado}
-                style={styles.actionButton}
-              />
-              <Button
-                title="⚠️ Suspender"
-                variant="danger"
-                onPress={() => solicitarCambioEstado('SUSPENDIDO')}
-                loading={procesandoEstado}
-                style={styles.actionButton}
-              />
-            </>
-          )}
-
-          {partidoFinalizadoOSuspendido && (
-            <View style={styles.irreversibleBanner}>
-              <Text style={styles.irreversibleText}>
-                🔒 El partido se encuentra en estado{' '}
-                <Text style={styles.bold}>{partido.estado}</Text>. Esta condición es irreversible
-                según las reglas oficiales (RN-05).
-              </Text>
-            </View>
-          )}
-        </View>
-      </Card>
-
-      {/* Sección Registro de Incidencias (RN-04) */}
-      <Card style={styles.eventsCard}>
-        <View style={styles.eventsHeaderRow}>
-          <View>
-            <Text style={styles.sectionHeaderTitle}>Incidencias y Cronología</Text>
-            <Text style={styles.sectionHeaderSubtitle}>
-              {partidoEnJuego
-                ? 'El partido está en juego. Puedes registrar goles y tarjetas.'
-                : 'La carga y corrección de eventos solo está habilitada cuando el partido está EN JUEGO.'}
-            </Text>
-          </View>
-
-          <Button
-            title="➕ Cargar Incidencia"
-            disabled={!partidoEnJuego}
-            onPress={() => setModalEventoVisible(true)}
-            style={styles.btnNuevoEvento}
-          />
-        </View>
-
-        {/* Línea de tiempo */}
-        <EventosTimeline
-          eventos={eventos}
-          partidoEnJuego={partidoEnJuego}
-          onEliminarEvento={solicitarEliminarEvento}
-          deletingId={deletingEventoId}
-        />
-      </Card>
-
-      {/* Modales de Confirmación y Registro */}
-      <RegistrarEventoModal
-        visible={modalEventoVisible}
-        onClose={() => setModalEventoVisible(false)}
-        onSubmit={handleRegistrarEvento}
-        jugadoresLocal={jugadoresLocal}
-        jugadoresVisitante={jugadoresVisitante}
-        nombreEquipoLocal={partido.nombreEquipoLocal || 'Local'}
-        nombreEquipoVisitante={partido.nombreEquipoVisitante || 'Visitante'}
-      />
-
-      {/* Modal Confirmación Estado */}
-      <ConfirmationModal
-        visible={confirmEstadoModal.visible}
-        title={confirmEstadoModal.titulo}
-        message={confirmEstadoModal.mensaje}
-        isDestructive={confirmEstadoModal.esDestructivo}
-        isLoading={procesandoEstado}
-        onConfirm={ejecutarCambioEstado}
-        onCancel={() =>
-          setConfirmEstadoModal((prev) => ({ ...prev, visible: false, nuevoEstado: null }))
+    <GradientBackground>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refrescando} onRefresh={() => cargarDatos(true)} tintColor="#38bdf8" />
         }
-      />
+      >
+        {/* Toast Alert */}
+        {toast && (
+          <View
+            style={[
+              styles.toast,
+              toast.type === 'error' && styles.toastError,
+              toast.type === 'success' && styles.toastSuccess,
+            ]}
+          >
+            <Text style={styles.toastIcon}>
+              {toast.type === 'error' ? '⚠️' : toast.type === 'success' ? '✅' : 'ℹ️'}
+            </Text>
+            <Text style={styles.toastText}>{toast.message}</Text>
+            <TouchableOpacity onPress={() => setToast(null)}>
+              <Text style={styles.toastClose}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-      {/* Modal Confirmación Eliminar Incidencia */}
-      <ConfirmationModal
-        visible={confirmDeleteModal.visible}
-        title="Corregir Incidencia"
-        message={`¿Deseas anular el registro de ${confirmDeleteModal.evento?.tipo} al jugador ${
-          confirmDeleteModal.evento?.jugadorNombreCompleto ||
-          `#${confirmDeleteModal.evento?.jugadorId}`
-        } en el minuto ${confirmDeleteModal.evento?.minuto}'?`}
-        confirmText="Eliminar Incidencia"
-        isDestructive={true}
-        isLoading={deletingEventoId !== null}
-        onConfirm={ejecutarEliminarEvento}
-        onCancel={() => setConfirmDeleteModal({ visible: false, evento: null })}
-      />
-    </ScrollView>
+        {/* Barra superior con letras blancas y contraste sobre el fondo azul */}
+        <View style={styles.topInfoRow}>
+          <TouchableOpacity
+            style={styles.backLink}
+            onPress={() => router.push('/partidos' as any)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.backLinkText}>← Lista de Partidos</Text>
+          </TouchableOpacity>
+          <View style={styles.userInfoBadge}>
+            <Text style={styles.userRoleText}>
+              👤 {user?.nombreCompleto || user?.username} ({user?.rol})
+            </Text>
+          </View>
+        </View>
+
+        {/* Tarjeta de Marcador Central */}
+        <View style={styles.scoreCard}>
+          <View style={styles.tournamentRow}>
+            <Text style={styles.tournamentName}>
+              🏆 {partido.nombreTorneo || 'Torneo Oficial'} • Fecha #{partido.numeroFecha}
+            </Text>
+            <EstadoBadge estado={partido.estado} />
+          </View>
+
+          {/* Enfrentamiento */}
+          <View style={styles.matchupContainer}>
+            <View style={styles.teamCol}>
+              <View style={styles.teamBadgeCircle}>
+                <Text style={styles.teamBadgeIcon}>🛡️</Text>
+              </View>
+              <Text style={styles.teamNameText} numberOfLines={2}>
+                {partido.nombreEquipoLocal || `Local #${partido.equipoLocalId}`}
+              </Text>
+              <View style={styles.sidePill}>
+                <Text style={styles.teamSideLabel}>LOCAL</Text>
+              </View>
+            </View>
+
+            <View style={styles.scoreCenter}>
+              <View style={styles.scoreBoard}>
+                <Text style={styles.scoreNumber}>{scoreCalculado.local}</Text>
+                <Text style={styles.scoreDivider}>:</Text>
+                <Text style={styles.scoreNumber}>{scoreCalculado.visitante}</Text>
+              </View>
+              <View style={[styles.liveClockBadge, partidoEnJuego && styles.liveClockBadgeActive]}>
+                <View style={[styles.liveClockDot, partidoEnJuego && styles.liveClockDotPulse]} />
+                <Text style={styles.liveClockText}>
+                  {partido.estado === 'EN_JUEGO'
+                    ? 'EN VIVO'
+                    : partido.estado === 'FINALIZADO'
+                    ? 'FINAL'
+                    : partido.estado === 'SUSPENDIDO'
+                    ? 'SUSP'
+                    : 'PROGRAMADO'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.teamCol}>
+              <View style={styles.teamBadgeCircle}>
+                <Text style={styles.teamBadgeIcon}>🛡️</Text>
+              </View>
+              <Text style={styles.teamNameText} numberOfLines={2}>
+                {partido.nombreEquipoVisitante || `Visitante #${partido.equipoVisitanteId}`}
+              </Text>
+              <View style={styles.sidePill}>
+                <Text style={styles.teamSideLabel}>VISITANTE</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Metadatos: Cancha, Árbitro, Horario */}
+          <View style={styles.metaRow}>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>🏟️ CANCHA</Text>
+              <Text style={styles.metaValue} numberOfLines={1}>
+                {partido.canchaNombre || partido.nombreCancha || `Cancha #${partido.canchaId}`}
+              </Text>
+            </View>
+
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>🧑‍⚖️ ÁRBITRO PRINCIPAL</Text>
+              <Text style={styles.metaValue} numberOfLines={1}>
+                {partido.arbitroNombre || partido.nombreArbitro || `Árbitro #${partido.arbitroId}`}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Controles del Ciclo de Vida del Partido (RN-05) */}
+        <Card style={styles.lifecycleCard}>
+          <View style={styles.cardHeaderSmall}>
+            <Text style={styles.sectionHeaderTitle}>Control de Ciclo de Vida (RN-05)</Text>
+            <Text style={styles.sectionHeaderSubtitle}>
+              PROGRAMADO ➔ EN JUEGO ➔ FINALIZADO (o SUSPENDIDO)
+            </Text>
+          </View>
+
+          <View style={styles.lifecycleButtons}>
+            {partido.estado === 'PROGRAMADO' && (
+              <>
+                <Button
+                  title="▶️ Iniciar Partido"
+                  variant="success"
+                  onPress={() => solicitarCambioEstado('EN_JUEGO')}
+                  loading={procesandoEstado}
+                  style={styles.actionButton}
+                />
+                <Button
+                  title="⚠️ Suspender"
+                  variant="danger"
+                  onPress={() => solicitarCambioEstado('SUSPENDIDO')}
+                  loading={procesandoEstado}
+                  style={styles.actionButton}
+                />
+              </>
+            )}
+
+            {partido.estado === 'EN_JUEGO' && (
+              <>
+                <Button
+                  title="🏁 Finalizar Partido"
+                  variant="primary"
+                  onPress={() => solicitarCambioEstado('FINALIZADO')}
+                  loading={procesandoEstado}
+                  style={styles.actionButton}
+                />
+                <Button
+                  title="⚠️ Suspender"
+                  variant="danger"
+                  onPress={() => solicitarCambioEstado('SUSPENDIDO')}
+                  loading={procesandoEstado}
+                  style={styles.actionButton}
+                />
+              </>
+            )}
+
+            {partidoFinalizadoOSuspendido && (
+              <View style={styles.irreversibleBanner}>
+                <Text style={styles.irreversibleText}>
+                  🔒 El encuentro se encuentra en estado{' '}
+                  <Text style={styles.bold}>{partido.estado}</Text>. Esta condición es definitiva
+                  e irreversible según el reglamento oficial (RN-05).
+                </Text>
+              </View>
+            )}
+          </View>
+        </Card>
+
+        {/* Sección Registro de Incidencias (RN-04) */}
+        <Card style={styles.eventsCard}>
+          <View style={styles.eventsHeaderRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionHeaderTitle}>Incidencias y Cronología</Text>
+              <Text style={styles.sectionHeaderSubtitle}>
+                {partidoEnJuego
+                  ? 'Partido en curso. Puedes registrar goles, tarjetas amarillas y rojas.'
+                  : 'La carga y corrección de incidencias solo se admite con el partido EN JUEGO.'}
+              </Text>
+            </View>
+
+            <Button
+              title="➕ Cargar Incidencia"
+              variant={partidoEnJuego ? 'primary' : 'secondary'}
+              disabled={!partidoEnJuego}
+              onPress={() => setModalEventoVisible(true)}
+              style={styles.btnNuevoEvento}
+            />
+          </View>
+
+          {/* Línea de tiempo */}
+          <EventosTimeline
+            eventos={eventos}
+            partidoEnJuego={partidoEnJuego}
+            onEliminarEvento={solicitarEliminarEvento}
+            deletingId={deletingEventoId}
+          />
+        </Card>
+
+        {/* Modales */}
+        <RegistrarEventoModal
+          visible={modalEventoVisible}
+          onClose={() => setModalEventoVisible(false)}
+          onSubmit={handleRegistrarEvento}
+          jugadoresLocal={jugadoresLocal}
+          jugadoresVisitante={jugadoresVisitante}
+          nombreEquipoLocal={partido.nombreEquipoLocal || 'Local'}
+          nombreEquipoVisitante={partido.nombreEquipoVisitante || 'Visitante'}
+        />
+
+        <ConfirmationModal
+          visible={confirmEstadoModal.visible}
+          title={confirmEstadoModal.titulo}
+          message={confirmEstadoModal.mensaje}
+          isDestructive={confirmEstadoModal.esDestructivo}
+          isLoading={procesandoEstado}
+          onConfirm={ejecutarCambioEstado}
+          onCancel={() =>
+            setConfirmEstadoModal((prev) => ({ ...prev, visible: false, nuevoEstado: null }))
+          }
+        />
+
+        <ConfirmationModal
+          visible={confirmDeleteModal.visible}
+          title="Corregir Incidencia"
+          message={`¿Deseas anular el registro de ${confirmDeleteModal.evento?.tipo} al jugador ${
+            confirmDeleteModal.evento?.jugadorNombreCompleto ||
+            `#${confirmDeleteModal.evento?.jugadorId}`
+          } en el minuto ${confirmDeleteModal.evento?.minuto}'?`}
+          confirmText="Eliminar Incidencia"
+          isDestructive={true}
+          isLoading={deletingEventoId !== null}
+          onConfirm={ejecutarEliminarEvento}
+          onCancel={() => setConfirmDeleteModal({ visible: false, evento: null })}
+        />
+      </ScrollView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
   },
   content: {
     padding: 16,
     paddingBottom: 40,
+    maxWidth: 860,
+    alignSelf: 'center',
+    width: '100%',
   },
   loadingCenter: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0f172a',
     padding: 24,
   },
   loadingText: {
-    color: '#94a3b8',
-    marginTop: 12,
+    color: '#93c5fd',
+    marginTop: 14,
     fontSize: 14,
+    fontWeight: '600',
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#ffffff',
     marginBottom: 16,
   },
@@ -540,35 +546,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   backLink: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-    backgroundColor: '#1e293b',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   backLinkText: {
     color: '#38bdf8',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  userInfo: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+  userInfoBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   userRoleText: {
-    color: '#94a3b8',
+    color: '#e2e8f0',
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   toast: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#0284c7',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 14,
   },
   toastError: {
     backgroundColor: '#dc2626',
@@ -583,7 +595,7 @@ const styles = StyleSheet.create({
   toastText: {
     color: '#ffffff',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     flex: 1,
   },
   toastClose: {
@@ -593,12 +605,17 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   scoreCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: 'rgba(11, 30, 54, 0.85)',
+    borderRadius: 20,
+    padding: 22,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 12px 30px -4px rgba(2, 132, 199, 0.25)',
+      } as any,
+    }),
   },
   tournamentRow: {
     flexDirection: 'row',
@@ -606,13 +623,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
-    paddingBottom: 10,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    paddingBottom: 12,
   },
   tournamentName: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#f8fafc',
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: -0.2,
   },
   matchupContainer: {
     flexDirection: 'row',
@@ -623,48 +641,72 @@ const styles = StyleSheet.create({
   teamCol: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
+  },
+  teamBadgeCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   teamBadgeIcon: {
-    fontSize: 32,
-    marginBottom: 6,
+    fontSize: 26,
   },
   teamNameText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: '#ffffff',
     textAlign: 'center',
+    letterSpacing: -0.2,
+  },
+  sidePill: {
+    marginTop: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   teamSideLabel: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 9,
+    fontWeight: '800',
     color: '#94a3b8',
-    marginTop: 4,
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   scoreCenter: {
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   scoreBoard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0f172a',
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 12,
+    backgroundColor: '#040d1a',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 16,
     borderWidth: 2,
     borderColor: '#38bdf8',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 25px rgba(56, 189, 248, 0.25)',
+      } as any,
+    }),
   },
   scoreNumber: {
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: '900',
     color: '#ffffff',
-    minWidth: 36,
+    minWidth: 44,
     textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -1,
   },
   scoreDivider: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '800',
     color: '#38bdf8',
     marginHorizontal: 4,
@@ -672,62 +714,76 @@ const styles = StyleSheet.create({
   liveClockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0369a1',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginTop: 8,
-    gap: 4,
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    gap: 6,
+  },
+  liveClockBadgeActive: {
+    backgroundColor: '#064e3b',
+    borderColor: '#059669',
   },
   liveClockDot: {
-    color: '#4ade80',
-    fontSize: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#94a3b8',
+  },
+  liveClockDotPulse: {
+    backgroundColor: '#4ade80',
   },
   liveClockText: {
     color: '#ffffff',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#0f172a',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 16,
-    gap: 8,
+    backgroundColor: 'rgba(4, 13, 26, 0.6)',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    gap: 12,
   },
   metaItem: {
     flex: 1,
   },
   metaLabel: {
-    fontSize: 11,
-    color: '#94a3b8',
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: 10,
+    color: '#7dd3fc',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginBottom: 3,
   },
   metaValue: {
     fontSize: 13,
-    color: '#f1f5f9',
+    color: '#f8fafc',
     fontWeight: '700',
   },
   lifecycleCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
-    padding: 16,
     marginBottom: 16,
+  },
+  cardHeaderSmall: {
+    marginBottom: 14,
   },
   sectionHeaderTitle: {
     fontSize: 16,
     fontWeight: '800',
     color: '#0f172a',
+    letterSpacing: -0.3,
   },
   sectionHeaderSubtitle: {
     fontSize: 12,
     color: '#64748b',
-    marginTop: 2,
-    marginBottom: 14,
+    marginTop: 3,
   },
   lifecycleButtons: {
     flexDirection: 'row',
@@ -738,23 +794,23 @@ const styles = StyleSheet.create({
   },
   irreversibleBanner: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+    padding: 14,
+    borderRadius: 10,
     borderLeftWidth: 4,
-    borderLeftColor: '#64748b',
+    borderLeftColor: '#0284c7',
   },
   irreversibleText: {
     fontSize: 13,
     color: '#475569',
+    lineHeight: 18,
   },
   bold: {
-    fontWeight: '700',
+    fontWeight: '800',
+    color: '#0f172a',
   },
   eventsCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
-    padding: 16,
+    marginBottom: 20,
   },
   eventsHeaderRow: {
     flexDirection: 'row',
@@ -762,11 +818,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
   },
   btnNuevoEvento: {
-    alignSelf: 'center',
-    minWidth: 150,
+    minWidth: 160,
   },
 });
 

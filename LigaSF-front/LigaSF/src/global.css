@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+
 :root {
-  --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Transitions.dev Motion Tokens */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -11,9 +13,15 @@
 
   /* Make Interfaces Feel Better - Shadows & Depth */
   --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-card: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-  --shadow-card-hover: 0 10px 15px -3px rgba(15, 23, 42, 0.09), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
-  --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+  --shadow-card: 0 4px 12px -2px rgba(14, 116, 144, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-card-hover: 0 14px 24px -4px rgba(2, 132, 199, 0.15), 0 6px 12px -4px rgba(15, 23, 42, 0.06);
+  --shadow-modal: 0 25px 35px -5px rgba(15, 23, 42, 0.25), 0 12px 16px -6px rgba(15, 23, 42, 0.15);
+}
+
+body, html, #root {
+  font-family: var(--font-display);
+  background-color: #07152b;
+  color: #0f172a;
 }
 
 /* Micro-interacciones globales suaves */
@@ -27,6 +35,12 @@ button, [role="button"] {
 
 button:active, [role="button"]:active {
   transform: scale(0.975);
+}
+
+/* Fondos y cards con estética pulida */
+.app-gradient-bg {
+  background: linear-gradient(145deg, #07152b 0%, #0a2540 35%, #0284c7 85%, #38bdf8 100%);
+  background-attachment: fixed;
 }
 
 /* Accesibilidad: Reducción de movimiento */

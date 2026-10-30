@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card } from '@/components/common';
+import { Card, GradientBackground } from '@/components/common';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -64,7 +64,7 @@ export default function HomeScreen() {
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <GradientBackground><ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Banner de Bienvenida y Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -164,7 +164,7 @@ export default function HomeScreen() {
           </Card>
         </TouchableOpacity>
       ))}
-    </ScrollView>
+    </ScrollView></GradientBackground>
   );
 }
 

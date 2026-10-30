@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -151,7 +151,7 @@ export default function CatalogosScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <GradientBackground><View style={styles.container}>
       {/* Selector de Pestañas / Segmentos */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
@@ -403,7 +403,7 @@ export default function CatalogosScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </View></GradientBackground>
   );
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import {
 } from '@/api/equiposApi';
 import { getTorneos } from '@/api/catalogosApi';
 import { Equipo, Torneo } from '@/api/types';
-import { LoadingView, ErrorView, EmptyView, Button } from '@/components/common';
+import { LoadingView, ErrorView, EmptyView, Button, GradientBackground } from '@/components/common';
 import { EquipoCard } from '@/components/equipos/EquipoCard';
 import { EquipoFormModal } from '@/components/equipos/EquipoFormModal';
 
@@ -120,7 +120,7 @@ export default function EquiposScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <GradientBackground><View style={styles.container}>
       {/* Barra de Filtros y Acción */}
       <View style={styles.filterCard}>
         <View style={styles.filterHeader}>
@@ -200,7 +200,7 @@ export default function EquiposScreen() {
         onSubmit={handleCrearOEditar}
         equipoEditar={equipoEditar}
       />
-    </View>
+    </View></GradientBackground>
   );
 }
 

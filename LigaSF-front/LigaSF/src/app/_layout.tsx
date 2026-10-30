@@ -1,5 +1,6 @@
-﻿import { Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { AuthProvider } from '@/context/AuthContext';
+import '../global.css';
 
 export default function RootLayout() {
   return (
@@ -7,11 +8,17 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#0284c7',
+            backgroundColor: '#07152b',
           },
           headerTintColor: '#ffffff',
           headerTitleStyle: {
-            fontWeight: 'bold',
+            fontWeight: '800',
+            fontSize: 17,
+            letterSpacing: -0.3,
+          },
+          headerShadowVisible: false,
+          contentStyle: {
+            backgroundColor: '#07152b',
           },
         }}
       >
@@ -30,7 +37,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="jugadores"
           options={{
-            title: 'Gestión de Jugadores',
+            title: 'Planteles y Jugadores',
           }}
         />
         <Stack.Screen
@@ -60,7 +67,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="auth/login"
           options={{
-            title: 'Iniciar Sesión',
+            title: 'Acceso Oficial',
           }}
         />
       </Stack>

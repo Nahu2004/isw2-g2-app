@@ -1,4 +1,4 @@
-// Pantalla principal del Módulo 4: Reglamento
+﻿// Pantalla principal del Módulo 4: Reglamento
 // Las 3 funcionalidades están implementadas:
 //   - Horarios:  Validar disponibilidad de cancha y árbitro (RN-01, RN-02) ✅
 //   - Sanciones: Lista de jugadores sancionados (RN-03)                     ✅
@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { ValidarHorarioForm } from '@/components/reglamento/ValidarHorarioForm';
 import { SancionesForm } from '@/components/reglamento/SancionesForm';
+import { GradientBackground } from '@/components/common';
 import { BloqueoForm } from '@/components/reglamento/BloqueoForm';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -84,7 +85,7 @@ export default function ReglamentoScreen() {
       >
         {renderContenido()}
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView></GradientBackground>
   );
 }
 

@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/api/authService';
-import { Card, InputField, Button } from '@/components/common';
+import { Card, InputField, Button, GradientBackground } from '@/components/common';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -61,146 +61,152 @@ export default function LoginPage() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.keyboardContainer}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.container}>
-        <Card style={styles.card}>
-          {/* Header */}
-          <View style={styles.header}>
+    <GradientBackground>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.container}>
+          {/* Header Superior con letras blancas */}
+          <View style={styles.topBrand}>
             <View style={styles.logoBadge}>
               <Text style={styles.logoIcon}>⚽</Text>
             </View>
-            <Text style={styles.title}>Liga Amateur Santafesina</Text>
-            <Text style={styles.subtitle}>
-              Acceso seguro para Administradores y Delegados de mesa
+            <Text style={styles.brandTitle}>Liga Amateur Santafesina</Text>
+            <Text style={styles.brandSubtitle}>
+              Panel Oficial de Delegados y Autoridades de Mesa
             </Text>
           </View>
 
-          {/* Banner de error */}
-          {errorMessage ? (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorIcon}>⚠️</Text>
-              <Text style={styles.errorText}>{errorMessage}</Text>
+          <Card style={styles.card}>
+            {/* Banner de error */}
+            {errorMessage ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorIcon}>⚠️</Text>
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              </View>
+            ) : null}
+
+            {/* Formulario */}
+            <View style={styles.form}>
+              <InputField
+                label="Usuario"
+                placeholder="Ej: admin o delegado1"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                editable={!loading}
+              />
+
+              <InputField
+                label="Contraseña"
+                placeholder="Tu clave de acceso"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                editable={!loading}
+              />
+
+              <Button
+                title="Iniciar Sesión"
+                onPress={handleLogin}
+                loading={loading}
+                style={styles.submitBtn}
+              />
             </View>
-          ) : null}
-
-          {/* Formulario */}
-          <View style={styles.form}>
-            <InputField
-              label="Nombre de Usuario"
-              placeholder="Ej: admin o delegado1"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              editable={!loading}
-            />
-
-            <InputField
-              label="Contraseña"
-              placeholder="Tu clave de acceso"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-            />
-
-            <Button
-              title="Iniciar Sesión"
-              onPress={handleLogin}
-              loading={loading}
-              style={styles.submitBtn}
-            />
-          </View>
 
             {/* Cuentas de prueba rápidas */}
-          <View style={styles.hintBox}>
-            <Text style={styles.hintTitle}>Cuenta precargada en base de datos:</Text>
-            <TouchableOpacity
-              onPress={() => {
-                setUsername('admin');
-                setPassword('Admin2026!');
-              }}
-              style={styles.hintItem}
-            >
-              <Text style={styles.hintRole}>ADMIN:</Text>
-              <Text style={styles.hintCreds}>admin / Admin2026!</Text>
-            </TouchableOpacity>
-          </View>
+            <View style={styles.hintBox}>
+              <Text style={styles.hintTitle}>Cuenta precargada en base de datos:</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setUsername('admin');
+                  setPassword('Admin2026!');
+                }}
+                style={styles.hintItem}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.hintRole}>ADMIN:</Text>
+                <Text style={styles.hintCreds}>admin / Admin2026!</Text>
+              </TouchableOpacity>
+            </View>
 
-          {user && (
-            <TouchableOpacity
-              onPress={() => router.replace('/' as any)}
-              style={styles.backHomeLink}
-            >
-              <Text style={styles.backHomeText}>← Volver al Menú Principal</Text>
-            </TouchableOpacity>
-          )}
-        </Card>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            {user && (
+              <TouchableOpacity
+                onPress={() => router.replace('/' as any)}
+                style={styles.backHomeLink}
+              >
+                <Text style={styles.backHomeText}>← Volver al Menú Principal</Text>
+              </TouchableOpacity>
+            )}
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
   },
   container: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    paddingVertical: 40,
   },
-  card: {
-    width: '100%',
-    maxWidth: 440,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 28,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  header: {
+  topBrand: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 68,
+    height: 68,
+    borderRadius: 20, // R_inner
     backgroundColor: '#0284c7',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 20px rgba(2, 132, 199, 0.35)',
+      } as any,
+    }),
   },
   logoIcon: {
     fontSize: 32,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0f172a',
+  brandTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#ffffff',
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  subtitle: {
+  brandSubtitle: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#93c5fd', // Azul claro con alto contraste
     textAlign: 'center',
     marginTop: 4,
+    fontWeight: '500',
+  },
+  card: {
+    width: '100%',
+    maxWidth: 440,
+    padding: 26,
+    borderRadius: 20,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#fef2f2',
     borderColor: '#fca5a5',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
     marginBottom: 16,
   },
@@ -215,50 +221,53 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   form: {
-    gap: 8,
+    gap: 4,
   },
   submitBtn: {
-    marginTop: 8,
+    marginTop: 10,
   },
   hintBox: {
-    marginTop: 24,
+    marginTop: 22,
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
   },
   hintTitle: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
     color: '#64748b',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: 8,
   },
   hintItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8fafc',
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 6,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   hintRole: {
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 12,
     color: '#0284c7',
-    width: 90,
+    width: 75,
   },
   hintCreds: {
     fontSize: 12,
-    color: '#475569',
+    color: '#334155',
+    fontWeight: '600',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   backHomeLink: {
-    marginTop: 16,
+    marginTop: 18,
     alignItems: 'center',
   },
   backHomeText: {
     color: '#0284c7',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

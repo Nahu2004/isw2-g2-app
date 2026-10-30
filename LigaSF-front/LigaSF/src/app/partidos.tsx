@@ -11,7 +11,7 @@ import {
 import { getPartidos, programarPartido, eliminarPartido } from '@/api/partidosApi';
 import { getTorneos } from '@/api/catalogosApi';
 import { Partido, Torneo } from '@/api/types';
-import { Card, Button, LoadingView, ErrorView, EmptyView } from '@/components/common';
+import { Card, Button, LoadingView, ErrorView, EmptyView, GradientBackground } from '@/components/common';
 import { ProgramarPartidoModal } from '@/components/partidos/ProgramarPartidoModal';
 
 export default function PartidosScreen() {
@@ -95,7 +95,7 @@ export default function PartidosScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <GradientBackground><View style={styles.container}>
       {/* Filtros */}
       <View style={styles.filterCard}>
         <Text style={styles.filterTitle}>Filtrar Encuentros</Text>
@@ -244,7 +244,7 @@ export default function PartidosScreen() {
         onSubmit={handleProgramar}
         torneoIdDefault={torneoId}
       />
-    </View>
+    </View></GradientBackground>
   );
 }
 
