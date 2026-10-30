@@ -17,7 +17,7 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
   return (
     <Card style={[styles.card, !jugador.activo && styles.cardInactivo]}>
       <View style={styles.contentRow}>
-        {/* Dorsal tipo camiseta */}
+        {/* Dorsal concéntrico con tabular-nums */}
         <View style={styles.dorsalCircle}>
           <Text style={styles.dorsalText}>#{jugador.numeroCamiseta}</Text>
         </View>
@@ -25,7 +25,7 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
         {/* Información del jugador */}
         <View style={styles.infoContainer}>
           <View style={styles.nombreRow}>
-            <Text style={styles.nombre}>
+            <Text style={styles.nombre} numberOfLines={1}>
               {jugador.apellido}, {jugador.nombre}
             </Text>
             <View
@@ -34,7 +34,8 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
                 jugador.activo ? styles.badgeActivo : styles.badgeInactivo,
               ]}
             >
-              <Text style={styles.badgeText}>
+              <View style={[styles.badgeDot, { backgroundColor: jugador.activo ? '#10b981' : '#94a3b8' }]} />
+              <Text style={[styles.badgeText, { color: jugador.activo ? '#047857' : '#64748b' }]}>
                 {jugador.activo ? 'ACTIVO' : 'INACTIVO'}
               </Text>
             </View>
@@ -56,8 +57,8 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
           onPress={() => onEditar(jugador)}
         />
         <Button
-          title={jugador.activo ? 'Desactivar' : 'Reactivar'}
-          variant={jugador.activo ? 'danger' : 'primary'}
+          title={jugador.activo ? 'Baja' : 'Reactivar'}
+          variant={jugador.activo ? 'danger' : 'success'}
           style={styles.smallBtn}
           onPress={() => onToggleEstado(jugador)}
         />
@@ -68,88 +69,105 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    padding: 14,
-    borderLeftWidth: 4,
-    borderLeftColor: '#10b981',
+    padding: 16,
+    borderRadius: 14,
   },
   cardInactivo: {
     opacity: 0.65,
-    borderLeftColor: '#94a3b8',
     backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
   },
   contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   dorsalCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#e0f2fe',
-    borderWidth: 2,
-    borderColor: '#0284c7',
-    justifyContent: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 12, // R_inner
+    backgroundColor: '#0284c7',
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#0369a1',
   },
   dorsalText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#0369a1',
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
   },
   infoContainer: {
     flex: 1,
   },
   nombreRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 4,
+    gap: 8,
   },
   nombre: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '800',
     color: '#0f172a',
     flex: 1,
-    marginRight: 8,
+    letterSpacing: -0.2,
   },
   badge: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
   },
   badgeActivo: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
   },
   badgeInactivo: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  badgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 4,
   },
   badgeText: {
     fontSize: 10,
-    fontWeight: 'bold',
-    color: '#166534',
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   dni: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#64748b',
-    marginBottom: 2,
+    fontWeight: '500',
   },
   equipo: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#0284c7',
-    fontWeight: '500',
+    fontWeight: '600',
+    marginTop: 2,
   },
   actionsRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 8,
     borderTopWidth: 1,
-    borderColor: '#f1f5f9',
-    paddingTop: 8,
+    borderTopColor: '#f1f5f9',
+    paddingTop: 12,
   },
   smallBtn: {
-    paddingVertical: 6,
+    paddingVertical: 7,
     paddingHorizontal: 12,
+    minHeight: 34,
+    borderRadius: 8,
   },
 });
+
+export default JugadorCard;

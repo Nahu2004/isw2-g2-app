@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { EstadoPartido } from '@/api/types';
 
 interface EstadoBadgeProps {
@@ -13,42 +13,47 @@ export const EstadoBadge: React.FC<EstadoBadgeProps> = ({ estado, style }) => {
       case 'EN_JUEGO':
         return {
           label: 'EN JUEGO',
-          bgColor: '#dcfce7',
-          textColor: '#15803d',
-          borderColor: '#86efac',
-          icon: '🟢',
+          bgColor: '#ecfdf5',
+          textColor: '#047857',
+          borderColor: '#a7f3d0',
+          dotColor: '#10b981',
+          hasPulse: true,
         };
       case 'PROGRAMADO':
         return {
           label: 'PROGRAMADO',
-          bgColor: '#e0f2fe',
+          bgColor: '#f0f9ff',
           textColor: '#0369a1',
-          borderColor: '#7dd3fc',
-          icon: '📅',
+          borderColor: '#bae6fd',
+          dotColor: '#0ea5e9',
+          hasPulse: false,
         };
       case 'FINALIZADO':
         return {
           label: 'FINALIZADO',
-          bgColor: '#f1f5f9',
+          bgColor: '#f8fafc',
           textColor: '#475569',
-          borderColor: '#cbd5e1',
-          icon: '🏁',
+          borderColor: '#e2e8f0',
+          dotColor: '#94a3b8',
+          hasPulse: false,
         };
       case 'SUSPENDIDO':
         return {
           label: 'SUSPENDIDO',
-          bgColor: '#fee2e2',
+          bgColor: '#fef2f2',
           textColor: '#b91c1c',
-          borderColor: '#fca5a5',
-          icon: '⚠️',
+          borderColor: '#fecaca',
+          dotColor: '#ef4444',
+          hasPulse: false,
         };
       default:
         return {
           label: estado || 'DESCONOCIDO',
-          bgColor: '#f1f5f9',
+          bgColor: '#f8fafc',
           textColor: '#64748b',
           borderColor: '#e2e8f0',
-          icon: 'ℹ️',
+          dotColor: '#94a3b8',
+          hasPulse: false,
         };
     }
   };
@@ -66,7 +71,7 @@ export const EstadoBadge: React.FC<EstadoBadgeProps> = ({ estado, style }) => {
         style,
       ]}
     >
-      <Text style={styles.badgeIcon}>{config.icon}</Text>
+      <View style={[styles.dot, { backgroundColor: config.dotColor }]} />
       <Text style={[styles.badgeText, { color: config.textColor }]}>{config.label}</Text>
     </View>
   );
@@ -77,19 +82,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+    paddingVertical: 5,
+    borderRadius: 999, // Pill concéntrico
     borderWidth: 1,
     alignSelf: 'flex-start',
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+      } as any,
+    }),
   },
-  badgeIcon: {
-    fontSize: 10,
-    marginRight: 5,
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
   },
 });
 
