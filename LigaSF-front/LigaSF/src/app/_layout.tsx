@@ -54,6 +54,14 @@ export default function RootLayout() {
               title: 'Programación de Partidos',
             }}
           />
+          <Stack.Screen
+            name="reglamento"
+            options={{
+              title: 'Reglamento',
+              headerStyle: { backgroundColor: '#f59e0b' },
+              headerTintColor: '#ffffff',
+            }}
+          />
         </Stack>
       </ThemeProvider>
     </AuthProvider>
