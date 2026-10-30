@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -46,6 +46,13 @@ export default function HomeScreen() {
       route: '/partidos',
       icon: '⚽',
       color: '#8b5cf6',
+    },
+    {
+      title: 'Reglamento y Sanciones',
+      desc: 'Consulta de suspendidos por fecha y validaciones reglamentarias',
+      route: '/reglamento',
+      icon: '⚖️',
+      color: '#6366f1',
     },
   ];
 

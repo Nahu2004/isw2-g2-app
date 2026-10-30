@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+﻿import { Stack } from 'expo-router';
 import { AuthProvider } from '@/context/AuthContext';
 
 export default function RootLayout() {
@@ -43,6 +43,12 @@ export default function RootLayout() {
           name="partidos"
           options={{
             title: 'Programación de Partidos',
+          }}
+        />
+        <Stack.Screen
+          name="reglamento"
+          options={{
+            title: 'Reglamento y Sanciones',
           }}
         />
         <Stack.Screen
