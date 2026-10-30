@@ -1,98 +1,162 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
+import { Card } from '@/components/common';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const menuItems = [
+    {
+      title: 'Equipos',
+      desc: 'Alta, edición y baja lógica de clubes por torneo',
+      route: '/equipos',
+      icon: '🛡️',
+      color: '#3b82f6',
+    },
+    {
+      title: 'Jugadores',
+      desc: 'Planteles, asignación de dorsales y DNI único',
+      route: '/jugadores',
+      icon: '🏃',
+      color: '#10b981',
+    },
+    {
+      title: 'Catálogos y Torneos',
+      desc: 'Gestión de torneos, canchas y árbitros colegiados',
+      route: '/catalogos',
+      icon: '📋',
+      color: '#f59e0b',
+    },
+    {
+      title: 'Programar Partidos',
+      desc: 'Fijar fechas con control de solapamiento de 2 horas',
+      route: '/partidos',
+      icon: '⚽',
+      color: '#8b5cf6',
+    },
+  ];
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.header}>
+        <Text style={styles.subtitle}>Panel de Administración</Text>
+        <Text style={styles.title}>Liga Amateur Santafesina</Text>
+        <View style={styles.userBadge}>
+          <Text style={styles.userText}>
+            👤 {user?.nombreCompleto || 'Administrador'} ({user?.rol || 'ADMIN'})
+          </Text>
+        </View>
+      </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <Text style={styles.sectionTitle}>Módulo 3: Administración de la Liga</Text>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      {menuItems.map((item) => (
+        <TouchableOpacity
+          key={item.route}
+          activeOpacity={0.8}
+          onPress={() => router.push(item.route as any)}
+        >
+          <Card style={styles.menuCard}>
+            <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
+              <Text style={styles.menuIcon}>{item.icon}</Text>
+            </View>
+            <View style={styles.menuInfo}>
+              <Text style={styles.itemTitle}>{item.title}</Text>
+              <Text style={styles.itemDesc}>{item.desc}</Text>
+            </View>
+            <Text style={styles.arrow}>❯</Text>
+          </Card>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+  content: {
+    padding: 16,
+    paddingBottom: 32,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  header: {
+    marginBottom: 20,
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#0284c7',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   title: {
-    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#0f172a',
+    marginTop: 2,
   },
-  code: {
+  userBadge: {
+    marginTop: 10,
+    backgroundColor: '#f1f5f9',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  userText: {
+    fontSize: 12,
+    color: '#475569',
+    fontWeight: '500',
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#64748b',
+    marginBottom: 12,
     textTransform: 'uppercase',
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  menuCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+  },
+  iconContainer: {
+    width: 46,
+    height: 46,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  menuIcon: {
+    fontSize: 22,
+  },
+  menuInfo: {
+    flex: 1,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  itemDesc: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  arrow: {
+    fontSize: 16,
+    color: '#94a3b8',
+    marginLeft: 8,
   },
 });
