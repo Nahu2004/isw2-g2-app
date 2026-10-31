@@ -29,6 +29,24 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="tabla"
+          options={{
+            title: 'Tabla de Posiciones',
+          }}
+        />
+        <Stack.Screen
+          name="fixture"
+          options={{
+            title: 'Fixture y Partidos',
+          }}
+        />
+        <Stack.Screen
+          name="partido/[id]"
+          options={{
+            title: 'Detalle del Partido',
+          }}
+        />
+        <Stack.Screen
           name="equipos"
           options={{
             title: 'Gestión de Equipos',
