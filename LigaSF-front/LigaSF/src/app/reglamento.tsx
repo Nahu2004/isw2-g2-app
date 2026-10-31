@@ -1,8 +1,5 @@
-﻿// Pantalla principal del Módulo 4: Reglamento
-// Las 3 funcionalidades están implementadas:
-//   - Horarios:  Validar disponibilidad de cancha y árbitro (RN-01, RN-02) ✅
-//   - Sanciones: Lista de jugadores sancionados (RN-03)                     ✅
-//   - Bloqueos:  Verificar si un jugador está bloqueado                     ✅
+// Pantalla principal — Módulo 4: Reglamento
+// Diseño premium oscuro alineado al sistema de diseño global (Theme)
 
 import React, { useState } from 'react';
 import {
@@ -12,10 +9,12 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
+
+import { Theme, sectionLabelStyle } from '@/constants/theme';
 import { ValidarHorarioForm } from '@/components/reglamento/ValidarHorarioForm';
 import { SancionesForm } from '@/components/reglamento/SancionesForm';
-import { GradientBackground } from '@/components/common';
 import { BloqueoForm } from '@/components/reglamento/BloqueoForm';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -25,13 +24,12 @@ type TabId = 'horarios' | 'sanciones' | 'bloqueos';
 interface Tab {
   id: TabId;
   label: string;
-  icono: string;
 }
 
 const TABS: Tab[] = [
-  { id: 'horarios',  label: 'Horarios',  icono: '🕐' },
-  { id: 'sanciones', label: 'Sanciones', icono: '🟨' },
-  { id: 'bloqueos',  label: 'Bloqueos',  icono: '🚫' },
+  { id: 'horarios',  label: 'HORARIOS'  },
+  { id: 'sanciones', label: 'SANCIONES' },
+  { id: 'bloqueos',  label: 'BLOQUEOS'  },
 ];
 
 // ─── Pantalla principal ───────────────────────────────────────────────────────
@@ -41,119 +39,124 @@ export default function ReglamentoScreen() {
 
   const renderContenido = () => {
     switch (tabActivo) {
-      case 'horarios':
-        return <ValidarHorarioForm />;
-      case 'sanciones':
-        return <SancionesForm />;
-      case 'bloqueos':
-        return <BloqueoForm />;
+      case 'horarios':  return <ValidarHorarioForm />;
+      case 'sanciones': return <SancionesForm />;
+      case 'bloqueos':  return <BloqueoForm />;
     }
   };
 
   return (
-    <GradientBackground>
-      <SafeAreaView style={styles.safeArea}>
-      {/* Encabezado del módulo */}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor={Theme.bg.base} />
+
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitulo}>⚖️ Reglamento</Text>
-        <Text style={styles.headerSubtitulo}>
-          Validaciones y sanciones de la liga
-        </Text>
+        <Text style={styles.headerLabel}>MÓDULO 4</Text>
+        <Text style={styles.headerTitle}>Reglamento</Text>
       </View>
 
-      {/* Tabs de navegación interna */}
-      <View style={styles.tabsContainer}>
-        {TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[styles.tab, tabActivo === tab.id && styles.tabActivo]}
-            onPress={() => setTabActivo(tab.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.tabIcono}>{tab.icono}</Text>
-            <Text style={[styles.tabLabel, tabActivo === tab.id && styles.tabLabelActivo]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Tabs — estilo línea inferior, sin pills */}
+      <View style={styles.tabsBar}>
+        {TABS.map((tab) => {
+          const activo = tabActivo === tab.id;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={styles.tabItem}
+              onPress={() => setTabActivo(tab.id)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabLabel, activo && styles.tabLabelActivo]}>
+                {tab.label}
+              </Text>
+              {activo && <View style={styles.tabIndicator} />}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Contenido de la tab activa */}
+      {/* Separador */}
+      <View style={styles.separator} />
+
+      {/* Contenido */}
       <ScrollView
-        style={styles.contenido}
-        contentContainerStyle={styles.contenidoInner}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {renderContenido()}
       </ScrollView>
     </SafeAreaView>
-    </GradientBackground>
   );
 }
 
 // ─── Estilos ──────────────────────────────────────────────────────────────────
 
-const AMBER = '#f59e0b';
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Theme.bg.base,
   },
+
+  // Header
   header: {
-    backgroundColor: AMBER,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingTop: Theme.spacing.lg,
+    paddingBottom: Theme.spacing.md,
   },
-  headerTitulo: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#ffffff',
+  headerLabel: {
+    ...sectionLabelStyle,
+    color: Theme.text.accent,
+    marginBottom: 4,
   },
-  headerSubtitulo: {
-    fontSize: 13,
-    color: '#fef3c7',
-    marginTop: 2,
+  headerTitle: {
+    fontSize: Theme.font.size.xxl,
+    fontWeight: Theme.font.weight.black,
+    color: Theme.text.primary,
+    letterSpacing: Theme.font.letterSpacing.tight,
   },
-  tabsContainer: {
+
+  // Tabs
+  tabsBar: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
+    paddingHorizontal: Theme.spacing.lg,
+    gap: Theme.spacing.xl,
   },
-  tab: {
-    flex: 1,
+  tabItem: {
+    paddingBottom: Theme.spacing.sm,
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActivo: {
-    borderBottomColor: AMBER,
-  },
-  tabIcono: {
-    fontSize: 16,
-    marginBottom: 2,
+    position: 'relative',
   },
   tabLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#94a3b8',
+    fontSize: Theme.font.size.xs,
+    fontWeight: Theme.font.weight.bold,
+    letterSpacing: Theme.font.letterSpacing.wide,
+    color: Theme.text.secondary,
   },
   tabLabelActivo: {
-    color: AMBER,
-    fontWeight: '700',
+    color: Theme.text.accent,
   },
-  contenido: {
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: Theme.accent.DEFAULT,
+    borderRadius: 1,
+  },
+
+  // Layout
+  separator: {
+    height: 1,
+    backgroundColor: Theme.border.subtle,
+  },
+  scroll: {
     flex: 1,
   },
-  contenidoInner: {
-    padding: 16,
-    paddingBottom: 40,
+  scrollContent: {
+    padding: Theme.spacing.lg,
+    paddingBottom: Theme.spacing.xxl,
   },
 });
