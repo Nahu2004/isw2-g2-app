@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { Theme, sectionLabelStyle } from '@/constants/theme';
 import { ValidarHorarioForm } from '@/components/reglamento/ValidarHorarioForm';
@@ -35,6 +36,7 @@ const TABS: Tab[] = [
 // ─── Pantalla principal ───────────────────────────────────────────────────────
 
 export default function ReglamentoScreen() {
+  const router = useRouter();
   const [tabActivo, setTabActivo] = useState<TabId>('horarios');
 
   const renderContenido = () => {
@@ -51,6 +53,15 @@ export default function ReglamentoScreen() {
 
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={styles.backArrow}>‹</Text>
+          <Text style={styles.backText}>Volver</Text>
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Reglamento</Text>
       </View>
 
@@ -103,6 +114,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.lg,
     paddingTop: Theme.spacing.lg,
     paddingBottom: Theme.spacing.md,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: Theme.spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  backArrow: {
+    fontSize: 22,
+    color: Theme.text.accent,
+    lineHeight: 24,
+    fontWeight: Theme.font.weight.bold,
+  },
+  backText: {
+    fontSize: Theme.font.size.sm,
+    color: Theme.text.accent,
+    fontWeight: Theme.font.weight.medium,
   },
   headerTitle: {
     fontSize: Theme.font.size.xxl,
