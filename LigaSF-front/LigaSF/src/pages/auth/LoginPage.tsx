@@ -2,17 +2,21 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/api/authService';
-import { Card, InputField, Button, GradientBackground } from '@/components/common';
+import { InputField, Button } from '@/components/common';
+
+const LOGO = require('../../../assets/images/logo-liga.jpg');
 
 export default function LoginPage() {
   const router = useRouter();
@@ -61,24 +65,33 @@ export default function LoginPage() {
   };
 
   return (
-    <GradientBackground>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.container}>
-          {/* Header Superior con letras blancas */}
+
+          {/* Header Superior — Logo y branding */}
           <View style={styles.topBrand}>
             <View style={styles.logoBadge}>
-              <Text style={styles.logoIcon}>⚽</Text>
+              <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
             </View>
-            <Text style={styles.brandTitle}>Liga Amateur Santafesina</Text>
+            <Text style={styles.brandTitle}>LIGA AMATEUR SANTAFESINA</Text>
             <Text style={styles.brandSubtitle}>
-              Panel Oficial de Delegados y Autoridades de Mesa
+              PANEL OFICIAL · DELEGADOS Y AUTORIDADES DE MESA
             </Text>
           </View>
 
-          <Card style={styles.card}>
+          {/* Card del formulario */}
+          <View style={styles.card}>
+
+            {/* Encabezado de la card */}
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>ACCESO AL SISTEMA</Text>
+              <View style={styles.cardTitleUnderline} />
+            </View>
+
             {/* Banner de error */}
             {errorMessage ? (
               <View style={styles.errorBanner}>
@@ -108,16 +121,16 @@ export default function LoginPage() {
               />
 
               <Button
-                title="Iniciar Sesión"
+                title="INICIAR SESIÓN"
                 onPress={handleLogin}
                 loading={loading}
                 style={styles.submitBtn}
               />
             </View>
 
-            {/* Cuentas de prueba rápidas */}
+            {/* Cuenta precargada */}
             <View style={styles.hintBox}>
-              <Text style={styles.hintTitle}>Cuenta precargada en base de datos:</Text>
+              <Text style={styles.hintTitle}>CUENTA PRECARGADA EN BASE DE DATOS</Text>
               <TouchableOpacity
                 onPress={() => {
                   setUsername('admin');
@@ -126,7 +139,8 @@ export default function LoginPage() {
                 style={styles.hintItem}
                 activeOpacity={0.7}
               >
-                <Text style={styles.hintRole}>ADMIN:</Text>
+                <Text style={styles.hintRole}>ADMIN</Text>
+                <View style={styles.hintDivider} />
                 <Text style={styles.hintCreds}>admin / Admin2026!</Text>
               </TouchableOpacity>
             </View>
@@ -136,17 +150,24 @@ export default function LoginPage() {
                 onPress={() => router.replace('/' as any)}
                 style={styles.backHomeLink}
               >
-                <Text style={styles.backHomeText}>← Volver al Menú Principal</Text>
+                <Text style={styles.backHomeText}>← VOLVER AL MENÚ PRINCIPAL</Text>
               </TouchableOpacity>
             )}
-          </Card>
+          </View>
+
+          {/* Footer */}
+          <Text style={styles.footerText}>LIGA SF · SISTEMA DE GESTIÓN DEPORTIVA</Text>
         </ScrollView>
       </KeyboardAvoidingView>
-    </GradientBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#0A0A0A',
+  },
   keyboardContainer: {
     flex: 1,
   },
@@ -155,56 +176,89 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    paddingVertical: 40,
+    paddingVertical: 48,
   },
+
+  // ── Branding ──────────────────────────────────────────────────────────────
   topBrand: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 28,
   },
   logoBadge: {
-    width: 68,
-    height: 68,
-    borderRadius: 20, // R_inner
-    backgroundColor: '#0284c7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    width: 110,
+    height: 110,
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#262626',
     ...Platform.select({
       web: {
-        boxShadow: '0 8px 20px rgba(2, 132, 199, 0.35)',
+        boxShadow: '0 0 32px rgba(125, 211, 252, 0.12)',
       } as any,
     }),
   },
-  logoIcon: {
-    fontSize: 32,
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   brandTitle: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '900',
-    color: '#ffffff',
+    color: '#FFFFFF',
     textAlign: 'center',
-    letterSpacing: -0.5,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
   brandSubtitle: {
-    fontSize: 13,
-    color: '#93c5fd', // Azul claro con alto contraste
+    fontSize: 10,
+    color: '#A3A3A3',
     textAlign: 'center',
-    marginTop: 4,
-    fontWeight: '500',
+    marginTop: 6,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
+
+  // ── Card del formulario ───────────────────────────────────────────────────
   card: {
     width: '100%',
     maxWidth: 440,
-    padding: 26,
+    backgroundColor: '#161616',
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#262626',
+    padding: 28,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 16px 48px rgba(0, 0, 0, 0.5)',
+      } as any,
+    }),
   },
+  cardHeader: {
+    marginBottom: 22,
+  },
+  cardTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#7DD3FC',
+    letterSpacing: 2,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  cardTitleUnderline: {
+    width: 32,
+    height: 2,
+    backgroundColor: '#7DD3FC',
+    borderRadius: 1,
+  },
+
+  // ── Error ─────────────────────────────────────────────────────────────────
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef2f2',
-    borderColor: '#fca5a5',
+    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+    borderColor: 'rgba(220, 38, 38, 0.35)',
     borderWidth: 1,
     borderRadius: 10,
     padding: 12,
@@ -215,59 +269,83 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   errorText: {
-    color: '#b91c1c',
+    color: '#f87171',
     fontSize: 13,
     fontWeight: '600',
     flex: 1,
   },
+
+  // ── Formulario ────────────────────────────────────────────────────────────
   form: {
     gap: 4,
   },
   submitBtn: {
-    marginTop: 10,
+    marginTop: 12,
   },
+
+  // ── Hint box ─────────────────────────────────────────────────────────────
   hintBox: {
-    marginTop: 22,
-    paddingTop: 16,
+    marginTop: 24,
+    paddingTop: 18,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#262626',
   },
   hintTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    color: '#64748b',
+    color: '#A3A3A3',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    letterSpacing: 1.5,
+    marginBottom: 10,
   },
   hintItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    padding: 10,
+    backgroundColor: '#1A1A1A',
+    padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#262626',
+    gap: 10,
   },
   hintRole: {
     fontWeight: '800',
-    fontSize: 12,
-    color: '#0284c7',
-    width: 75,
+    fontSize: 11,
+    color: '#7DD3FC',
+    letterSpacing: 1,
+  },
+  hintDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: '#262626',
   },
   hintCreds: {
     fontSize: 12,
-    color: '#334155',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
+
+  // ── Volver ────────────────────────────────────────────────────────────────
   backHomeLink: {
     marginTop: 18,
     alignItems: 'center',
   },
   backHomeText: {
-    color: '#0284c7',
-    fontSize: 13,
+    color: '#7DD3FC',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  footerText: {
+    marginTop: 32,
+    fontSize: 10,
+    color: '#3a3a3a',
     fontWeight: '700',
+    letterSpacing: 2,
+    textAlign: 'center',
+    textTransform: 'uppercase',
   },
 });
