@@ -1,8 +1,8 @@
 import { FlatList, StyleSheet, Text } from 'react-native';
 
-import EstadoCarga from '@/components/estado-carga';
-import FilaPosicion, { EncabezadoTabla } from '@/components/fila-posicion';
-import Pantalla from '@/components/pantalla';
+import EstadoCarga from '@/components/common/estado-carga';
+import FilaPosicion, { EncabezadoTabla } from '@/components/common/fila-posicion';
+import Pantalla from '@/components/common/pantalla';
 import { TORNEO_ID } from '@/constants/api';
 import { colores } from '@/constants/liga-tema';
 import { useFetch } from '@/hooks/use-fetch';
