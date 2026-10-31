@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -161,6 +161,7 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
 
     try {
       setSubmitting(true);
+      console.log('ENVIANDO PARTIDO:', { torneoId, numeroFecha: parseInt(numeroFecha, 10), equipoLocalId, equipoVisitanteId, canchaId, arbitroId, fechaHoraInicio });
       await onSubmit({
         torneoId,
         numeroFecha: parseInt(numeroFecha, 10),
@@ -433,3 +434,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
