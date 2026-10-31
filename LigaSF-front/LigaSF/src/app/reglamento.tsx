@@ -51,7 +51,6 @@ export default function ReglamentoScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerLabel}>MÓDULO 4</Text>
         <Text style={styles.headerTitle}>Reglamento</Text>
       </View>
 
@@ -104,11 +103,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.lg,
     paddingTop: Theme.spacing.lg,
     paddingBottom: Theme.spacing.md,
-  },
-  headerLabel: {
-    ...sectionLabelStyle,
-    color: Theme.text.accent,
-    marginBottom: 4,
   },
   headerTitle: {
     fontSize: Theme.font.size.xxl,
