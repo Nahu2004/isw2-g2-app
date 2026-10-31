@@ -13,6 +13,7 @@ import { getTorneos } from '@/api/catalogosApi';
 import { Partido, Torneo } from '@/api/types';
 import { Card, Button, LoadingView, ErrorView, EmptyView, GradientBackground } from '@/components/common';
 import { ProgramarPartidoModal } from '@/components/partidos/ProgramarPartidoModal';
+import { router } from 'expo-router';
 
 export default function PartidosScreen() {
   const [partidos, setPartidos] = useState<Partido[]>([]);
