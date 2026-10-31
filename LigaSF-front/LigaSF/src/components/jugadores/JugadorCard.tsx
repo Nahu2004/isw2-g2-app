@@ -1,6 +1,9 @@
+// Card de Jugador — diseño premium oscuro alineado a la paleta de LigaSF
+// Dorsal con tabular-nums concéntrico, badge semántico y acciones
+
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Card, Button } from '@/components/common';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Theme, sectionLabelStyle } from '@/constants/theme';
 import { Jugador } from '@/api/types';
 
 interface JugadorCardProps {
@@ -14,160 +17,229 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
   onEditar,
   onToggleEstado,
 }) => {
-  return (
-    <Card style={[styles.card, !jugador.activo && styles.cardInactivo]}>
-      <View style={styles.contentRow}>
-        {/* Dorsal concéntrico con tabular-nums */}
-        <View style={styles.dorsalCircle}>
-          <Text style={styles.dorsalText}>#{jugador.numeroCamiseta}</Text>
-        </View>
+  const activo = jugador.activo;
 
-        {/* Información del jugador */}
-        <View style={styles.infoContainer}>
-          <View style={styles.nombreRow}>
-            <Text style={styles.nombre} numberOfLines={1}>
-              {jugador.apellido}, {jugador.nombre}
-            </Text>
-            <View
-              style={[
-                styles.badge,
-                jugador.activo ? styles.badgeActivo : styles.badgeInactivo,
-              ]}
-            >
-              <View style={[styles.badgeDot, { backgroundColor: jugador.activo ? '#10b981' : '#94a3b8' }]} />
-              <Text style={[styles.badgeText, { color: jugador.activo ? '#047857' : '#64748b' }]}>
-                {jugador.activo ? 'ACTIVO' : 'INACTIVO'}
-              </Text>
-            </View>
+  const franjaColor = activo
+    ? Theme.status.success.text
+    : Theme.status.neutral.text;
+
+  const badgeBg = activo
+    ? Theme.status.success.bg
+    : Theme.status.neutral.bg;
+
+  const badgeBorder = activo
+    ? Theme.status.success.border
+    : Theme.status.neutral.border;
+
+  const badgeText = activo
+    ? Theme.status.success.text
+    : Theme.status.neutral.text;
+
+  return (
+    <View style={[styles.card, !activo && styles.cardInactivo]}>
+      {/* Franja lateral de estado */}
+      <View style={[styles.franja, { backgroundColor: franjaColor }]} />
+
+      <View style={styles.body}>
+        {/* Contenido principal: Dorsal + Nombre + Badge */}
+        <View style={styles.contentRow}>
+          {/* Dorsal numérico */}
+          <View style={styles.dorsalBox}>
+            <Text style={styles.dorsalText}>#{jugador.numeroCamiseta}</Text>
           </View>
 
-          <Text style={styles.dni}>🪪 DNI: {jugador.dni}</Text>
-          {jugador.nombreEquipo ? (
-            <Text style={styles.equipo}>🛡️ {jugador.nombreEquipo}</Text>
-          ) : null}
+          {/* Información */}
+          <View style={styles.infoCol}>
+            <View style={styles.nombreRow}>
+              <Text style={styles.nombre} numberOfLines={1}>
+                {jugador.apellido}, {jugador.nombre}
+              </Text>
+              <View style={[styles.badge, { backgroundColor: badgeBg, borderColor: badgeBorder }]}>
+                <View style={[styles.badgeDot, { backgroundColor: badgeText }]} />
+                <Text style={[styles.badgeText, { color: badgeText }]}>
+                  {activo ? 'ACTIVO' : 'INACTIVO'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.metaRow}>
+              <Text style={styles.dniText}>🪪 DNI {jugador.dni}</Text>
+              {jugador.nombreEquipo ? (
+                <Text style={styles.equipoText}>🛡️ {jugador.nombreEquipo}</Text>
+              ) : null}
+            </View>
+          </View>
+        </View>
+
+        {/* Botones de acción */}
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={[styles.btn, styles.btnSecondary]}
+            onPress={() => onEditar(jugador)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.btnSecondaryText}>Editar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.btn,
+              activo ? styles.btnDanger : styles.btnSuccess,
+            ]}
+            onPress={() => onToggleEstado(jugador)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.btnTextBold,
+                activo ? styles.btnDangerText : styles.btnSuccessText,
+              ]}
+            >
+              {activo ? 'Baja' : 'Reactivar'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
-
-      {/* Botones de acción */}
-      <View style={styles.actionsRow}>
-        <Button
-          title="Editar"
-          variant="secondary"
-          style={styles.smallBtn}
-          onPress={() => onEditar(jugador)}
-        />
-        <Button
-          title={jugador.activo ? 'Baja' : 'Reactivar'}
-          variant={jugador.activo ? 'danger' : 'success'}
-          style={styles.smallBtn}
-          onPress={() => onToggleEstado(jugador)}
-        />
-      </View>
-    </Card>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
-    borderRadius: 14,
+    flexDirection: 'row',
+    backgroundColor: Theme.bg.card,
+    borderRadius: Theme.radius.md,
+    borderWidth: 1,
+    borderColor: Theme.border.subtle,
+    marginBottom: Theme.spacing.sm,
+    overflow: 'hidden',
   },
   cardInactivo: {
     opacity: 0.65,
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+  },
+  franja: {
+    width: 3,
+  },
+  body: {
+    flex: 1,
+    padding: Theme.spacing.md,
+    gap: Theme.spacing.sm,
   },
   contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: Theme.spacing.sm,
   },
-  dorsalCircle: {
+  dorsalBox: {
     width: 44,
     height: 44,
-    borderRadius: 12, // R_inner
-    backgroundColor: '#0284c7',
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.accent.dim,
+    borderWidth: 1,
+    borderColor: Theme.border.active,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#0369a1',
   },
   dorsalText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '800',
+    color: Theme.accent.DEFAULT,
+    fontSize: Theme.font.size.md,
+    fontWeight: Theme.font.weight.black,
     fontVariant: ['tabular-nums'],
   },
-  infoContainer: {
+  infoCol: {
     flex: 1,
+    gap: 3,
   },
   nombreRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
-    gap: 8,
+    alignItems: 'center',
   },
   nombre: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0f172a',
+    fontSize: Theme.font.size.md,
+    fontWeight: Theme.font.weight.bold,
+    color: Theme.text.primary,
     flex: 1,
-    letterSpacing: -0.2,
+    marginRight: 6,
   },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: Theme.radius.sm,
     borderWidth: 1,
-  },
-  badgeActivo: {
-    backgroundColor: '#ecfdf5',
-    borderColor: '#a7f3d0',
-  },
-  badgeInactivo: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    gap: 4,
   },
   badgeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 4,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   badgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontSize: Theme.font.size.xs,
+    fontWeight: Theme.font.weight.bold,
+    letterSpacing: Theme.font.letterSpacing.wide,
   },
-  dni: {
-    fontSize: 12,
-    color: '#64748b',
-    fontWeight: '500',
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: Theme.spacing.sm,
   },
-  equipo: {
-    fontSize: 12,
-    color: '#0284c7',
-    fontWeight: '600',
-    marginTop: 2,
+  dniText: {
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
+    fontVariant: ['tabular-nums'],
+  },
+  equipoText: {
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.accent,
+    fontWeight: Theme.font.weight.semibold,
   },
   actionsRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-    paddingTop: 12,
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+    marginTop: 2,
   },
-  smallBtn: {
-    paddingVertical: 7,
+  btn: {
+    paddingVertical: 6,
     paddingHorizontal: 12,
-    minHeight: 34,
-    borderRadius: 8,
+    borderRadius: Theme.radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 32,
+  },
+  btnSecondary: {
+    backgroundColor: Theme.bg.input,
+    borderWidth: 1,
+    borderColor: Theme.border.subtle,
+  },
+  btnSecondaryText: {
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.semibold,
+  },
+  btnDanger: {
+    backgroundColor: Theme.status.danger.bg,
+    borderWidth: 1,
+    borderColor: Theme.status.danger.border,
+  },
+  btnDangerText: {
+    color: Theme.status.danger.text,
+  },
+  btnSuccess: {
+    backgroundColor: Theme.status.success.bg,
+    borderWidth: 1,
+    borderColor: Theme.status.success.border,
+  },
+  btnSuccessText: {
+    color: Theme.status.success.text,
+  },
+  btnTextBold: {
+    fontSize: Theme.font.size.xs,
+    fontWeight: Theme.font.weight.bold,
   },
 });
-
-export default JugadorCard;

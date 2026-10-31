@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+// Pantalla de Equipos — diseño premium oscuro alineado a LigaSF
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +8,8 @@ import {
   Alert,
   Switch,
   TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -18,9 +21,10 @@ import {
 } from '@/api/equiposApi';
 import { getTorneos } from '@/api/catalogosApi';
 import { Equipo, Torneo } from '@/api/types';
-import { LoadingView, ErrorView, EmptyView, Button, GradientBackground } from '@/components/common';
+import { LoadingView, ErrorView, EmptyView } from '@/components/common';
 import { EquipoCard } from '@/components/equipos/EquipoCard';
 import { EquipoFormModal } from '@/components/equipos/EquipoFormModal';
+import { Theme, sectionLabelStyle } from '@/constants/theme';
 
 export default function EquiposScreen() {
   const router = useRouter();
@@ -31,7 +35,7 @@ export default function EquiposScreen() {
   const [torneoSeleccionado, setTorneoSeleccionado] = useState<number | undefined>(undefined);
   const [soloActivos, setSoloActivos] = useState(false);
 
-  // Estados de interfaz y feedback (3 estados de cátedra)
+  // Estados de feedback
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,27 +124,43 @@ export default function EquiposScreen() {
   };
 
   return (
-    <GradientBackground><View style={styles.container}>
-      {/* Barra de Filtros y Acción */}
-      <View style={styles.filterCard}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor={Theme.bg.base} />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={styles.backArrow}>‹</Text>
+          <Text style={styles.backText}>Volver</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Equipos</Text>
+      </View>
+
+      {/* Panel de Filtros y Acción */}
+      <View style={styles.filterSection}>
         <View style={styles.filterHeader}>
-          <Text style={styles.filterTitle}>Filtros de Búsqueda</Text>
+          <Text style={styles.filterTitle}>FILTROS Y TORNEO</Text>
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Solo activos</Text>
             <Switch
               value={soloActivos}
               onValueChange={setSoloActivos}
-              trackColor={{ false: '#cbd5e1', true: '#bae6fd' }}
-              thumbColor={soloActivos ? '#0284c7' : '#f1f5f9'}
+              trackColor={{ false: Theme.border.subtle, true: Theme.accent.dim }}
+              thumbColor={soloActivos ? Theme.accent.DEFAULT : Theme.text.secondary}
             />
           </View>
         </View>
 
-        {/* Selector de Torneos en Horizontal */}
+        {/* Selector de Torneos */}
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={[{ id: undefined, nombre: 'Todos los Torneos' } as any, ...torneos]}
+          data={[{ id: undefined, nombre: 'Todos' } as any, ...torneos]}
           keyExtractor={(item) => String(item.id ?? 'todos')}
           contentContainerStyle={styles.torneoFilterList}
           renderItem={({ item }) => {
@@ -149,6 +169,7 @@ export default function EquiposScreen() {
               <TouchableOpacity
                 style={[styles.torneoPill, isSelected && styles.torneoPillActive]}
                 onPress={() => setTorneoSeleccionado(item.id)}
+                activeOpacity={0.7}
               >
                 <Text
                   style={[
@@ -163,35 +184,41 @@ export default function EquiposScreen() {
           }}
         />
 
-        <Button
-          title="+ Nuevo Equipo"
-          onPress={abrirModalCrear}
+        {/* Botón de creación */}
+        <TouchableOpacity
           style={styles.nuevoBtn}
-        />
+          onPress={abrirModalCrear}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.nuevoBtnText}>+ NUEVO EQUIPO</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Renderizado condicional de los 3 Estados */}
-      {cargando ? (
-        <LoadingView mensaje="Cargando clubes y equipos..." />
-      ) : error ? (
-        <ErrorView mensaje={error} onRetry={cargarDatos} />
-      ) : equipos.length === 0 ? (
-        <EmptyView mensaje="No se encontraron equipos registrados con los filtros seleccionados." />
-      ) : (
-        <FlatList
-          data={equipos}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <EquipoCard
-              equipo={item}
-              onEditar={abrirModalEditar}
-              onToggleEstado={handleToggleEstado}
-              onVerJugadores={irAPlantel}
-            />
-          )}
-        />
-      )}
+      {/* Lista de Equipos con estados de carga */}
+      <View style={styles.listContainer}>
+        {cargando ? (
+          <LoadingView mensaje="Cargando clubes y equipos..." />
+        ) : error ? (
+          <ErrorView mensaje={error} onRetry={cargarDatos} />
+        ) : equipos.length === 0 ? (
+          <EmptyView mensaje="No se encontraron equipos registrados con los filtros seleccionados." />
+        ) : (
+          <FlatList
+            data={equipos}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <EquipoCard
+                equipo={item}
+                onEditar={abrirModalEditar}
+                onToggleEstado={handleToggleEstado}
+                onVerJugadores={irAPlantel}
+              />
+            )}
+          />
+        )}
+      </View>
 
       {/* Modal Reutilizable de Alta y Edición */}
       <EquipoFormModal
@@ -200,70 +227,115 @@ export default function EquiposScreen() {
         onSubmit={handleCrearOEditar}
         equipoEditar={equipoEditar}
       />
-    </View></GradientBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Theme.bg.base,
   },
-  filterCard: {
-    backgroundColor: '#ffffff',
-    padding: 14,
+  header: {
+    paddingHorizontal: Theme.spacing.lg,
+    paddingTop: Theme.spacing.sm,
+    paddingBottom: Theme.spacing.md,
     borderBottomWidth: 1,
-    borderColor: '#e2e8f0',
+    borderBottomColor: Theme.border.subtle,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  backArrow: {
+    color: Theme.accent.DEFAULT,
+    fontSize: 22,
+    lineHeight: 22,
+    marginRight: 4,
+    fontWeight: '300',
+  },
+  backText: {
+    color: Theme.accent.DEFAULT,
+    fontSize: Theme.font.size.sm,
+    fontWeight: Theme.font.weight.semibold,
+  },
+  headerTitle: {
+    fontSize: Theme.font.size.xxl,
+    fontWeight: Theme.font.weight.bold,
+    color: Theme.text.primary,
+    letterSpacing: Theme.font.letterSpacing.tight,
+  },
+  filterSection: {
+    backgroundColor: Theme.bg.card,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.border.subtle,
+    gap: Theme.spacing.sm,
   },
   filterHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
   },
   filterTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1e293b',
+    ...sectionLabelStyle,
+    color: Theme.text.secondary,
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Theme.spacing.xs,
   },
   switchLabel: {
-    fontSize: 13,
-    color: '#64748b',
-    fontWeight: '500',
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
   },
   torneoFilterList: {
-    paddingVertical: 6,
-    gap: 8,
+    gap: Theme.spacing.xs,
+    paddingVertical: 2,
   },
   torneoPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.bg.input,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: Theme.border.subtle,
   },
   torneoPillActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+    backgroundColor: Theme.accent.dim,
+    borderColor: Theme.border.active,
   },
   torneoPillText: {
-    fontSize: 13,
-    color: '#475569',
-    fontWeight: '600',
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.semibold,
   },
   torneoPillTextActive: {
-    color: '#ffffff',
+    color: Theme.accent.DEFAULT,
   },
   nuevoBtn: {
-    marginTop: 10,
+    backgroundColor: Theme.accent.DEFAULT,
+    paddingVertical: 10,
+    borderRadius: Theme.radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Theme.spacing.xs,
+  },
+  nuevoBtnText: {
+    color: '#0A0A0A',
+    fontWeight: Theme.font.weight.black,
+    fontSize: Theme.font.size.xs,
+    letterSpacing: Theme.font.letterSpacing.wide,
+  },
+  listContainer: {
+    flex: 1,
+    backgroundColor: Theme.bg.base,
   },
   list: {
-    padding: 16,
+    padding: Theme.spacing.md,
   },
 });
