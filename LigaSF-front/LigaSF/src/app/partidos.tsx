@@ -49,9 +49,14 @@ export default function PartidosScreen() {
   }, [cargarDatos]);
 
   const handleProgramar = async (data: any) => {
-    await programarPartido(data);
-    Alert.alert('Éxito', 'Partido programado satisfactoriamente.');
-    cargarDatos();
+    try {
+      await programarPartido(data);
+      Alert.alert('Éxito', 'Partido programado satisfactoriamente.');
+      cargarDatos();
+    } catch (e: any) {
+      Alert.alert('Error al programar', e.message || 'No se pudo programar el partido');
+      throw e;
+    }
   };
 
   const handleEliminar = (partido: Partido) => {
@@ -431,3 +436,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
 });
+
