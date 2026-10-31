@@ -1,6 +1,6 @@
-// Dashboard Principal — Liga Amateur Santafesina
-// Diseño Premium Oscuro alineado a Theme (paleta de Reglamento, Equipos, Jugadores, Partidos)
-// Sin etiquetas internas ("Módulo 1, 2...", "Público", "Operativo")
+// Dashboard Principal — Opción de Diseño Alternativa (Sports Club Pro / Grid Bento)
+// Fondo profundo #0A0A0A, tarjetas con fondo sutilmente traslúcido, acentos luminosos en hover,
+// iconografía integrada y tipografía deportiva de alto impacto.
 
 import React from 'react';
 import {
@@ -22,8 +22,9 @@ interface DashboardItem {
   desc: string;
   route: string;
   icon: string;
-  accentColor?: string;
-  highlight?: boolean;
+  accent: string;
+  badge?: string;
+  isHero?: boolean;
 }
 
 interface DashboardSection {
@@ -44,14 +45,14 @@ export default function HomeScreen() {
           desc: 'Clasificación oficial calculada desde resultados, puntos y diferencia de goles',
           route: '/tabla',
           icon: '🏆',
-          accentColor: Theme.accent.DEFAULT,
+          accent: '#7DD3FC',
         },
         {
           title: 'Fixture y Partidos',
           desc: 'Encuentros por fecha, tanteador y cronología de incidencias',
           route: '/fixture',
           icon: '⚽',
-          accentColor: '#38BDF8',
+          accent: '#38BDF8',
         },
       ],
     },
@@ -62,9 +63,10 @@ export default function HomeScreen() {
           title: 'Partido en Vivo',
           desc: 'Panel de control de incidencias, cronómetro y cambio de etapas del partido',
           route: '/partido-en-vivo?id=1',
-          icon: '🔴',
-          accentColor: Theme.status.danger.text,
-          highlight: true,
+          icon: '⚡',
+          accent: '#EF4444',
+          badge: 'TIEMPO REAL',
+          isHero: true,
         },
       ],
     },
@@ -76,35 +78,35 @@ export default function HomeScreen() {
           desc: 'Registro, edición y control de clubes federados por torneo',
           route: '/equipos',
           icon: '🛡️',
-          accentColor: '#60A5FA',
+          accent: '#60A5FA',
         },
         {
           title: 'Jugadores',
           desc: 'Planteles oficiales, números de camiseta y control de DNI único',
           route: '/jugadores',
           icon: '🏃',
-          accentColor: Theme.status.success.text,
+          accent: '#4ADE80',
         },
         {
           title: 'Catálogos Oficiales',
           desc: 'Torneos vigentes, predios/canchas habilitadas y cuerpo de árbitros',
           route: '/catalogos',
           icon: '📋',
-          accentColor: Theme.status.warning.text,
+          accent: '#FBBF24',
         },
         {
           title: 'Programar Partidos',
           desc: 'Asignación de fixture con control estricto de solapamientos horarios',
           route: '/partidos',
           icon: '🗓️',
-          accentColor: '#C084FC',
+          accent: '#C084FC',
         },
         {
           title: 'Reglamento y Sanciones',
-          desc: 'Control de suspendidos por fecha, bloqueos y disponibilidad de canchas y árbitros',
+          desc: 'Control de suspendidos por fecha, bloqueos y disponibilidad horaria',
           route: '/reglamento',
           icon: '⚖️',
-          accentColor: Theme.accent.DEFAULT,
+          accent: '#7DD3FC',
         },
       ],
     },
@@ -119,16 +121,19 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Banner de Bienvenida y Header */}
-        <View style={styles.headerCard}>
+        {/* Hero Banner Header */}
+        <View style={styles.heroCard}>
+          <View style={styles.heroGlow} pointerEvents="none" />
+          
           <View style={styles.headerTop}>
             <View style={styles.brandGroup}>
-              <View style={styles.badgeLeague}>
-                <Text style={styles.badgeLeagueText}>SANTA FE • ARGENTINA</Text>
+              <View style={styles.leagueTag}>
+                <View style={styles.leagueDot} />
+                <Text style={styles.leagueTagText}>SANTA FE • ARGENTINA</Text>
               </View>
               <Text style={styles.title}>Liga Amateur Santafesina</Text>
-              <Text style={styles.leadText}>
-                Sistema Oficial de Gestión Deportiva y Operación de Encuentros
+              <Text style={styles.subtitle}>
+                Plataforma integral de gestión deportiva, fixture y control disciplinario
               </Text>
             </View>
 
@@ -151,59 +156,94 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Estado de sesión */}
-          <View style={styles.userBadge}>
-            <View
-              style={[
-                styles.userStatusDot,
-                { backgroundColor: user ? Theme.status.success.text : Theme.text.secondary },
-              ]}
-            />
-            <Text style={styles.userText}>
-              {user ? `${user.nombreCompleto} • ${user.rol}` : 'Modo Invitado (Solo Lectura)'}
-            </Text>
+          {/* User Status Bar */}
+          <View style={styles.userBar}>
+            <View style={styles.userStatus}>
+              <View
+                style={[
+                  styles.statusIndicator,
+                  { backgroundColor: user ? Theme.status.success.text : Theme.text.secondary },
+                ]}
+              />
+              <Text style={styles.userText}>
+                {user ? `${user.nombreCompleto} • ${user.rol}` : 'Modo Invitado (Solo Lectura)'}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Secciones del Dashboard */}
-        {sections.map((section, sIdx) => (
-          <View key={section.title} style={styles.sectionBlock}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+        {/* Secciones con Bento Cards Deportivas */}
+        {sections.map((section) => (
+          <View key={section.title} style={styles.sectionWrap}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionBullet} />
+              <Text style={styles.sectionHeading}>{section.title}</Text>
+            </View>
 
-            <View style={styles.grid}>
+            <View style={styles.bentoGrid}>
               {section.items.map((item) => {
-                const borderActiveColor = item.highlight
-                  ? Theme.status.danger.border
-                  : Theme.border.subtle;
-                const franjaColor = item.accentColor || Theme.accent.DEFAULT;
+                const isHero = item.isHero;
 
                 return (
                   <TouchableOpacity
                     key={item.route}
                     style={[
-                      styles.card,
-                      item.highlight && styles.cardHighlight,
-                      { borderColor: borderActiveColor },
+                      styles.bentoCard,
+                      isHero && styles.heroBentoCard,
                     ]}
-                    activeOpacity={0.82}
+                    activeOpacity={0.85}
                     onPress={() => router.push(item.route as any)}
                   >
-                    {/* Franja lateral indicadora */}
-                    <View style={[styles.franja, { backgroundColor: franjaColor }]} />
+                    {/* Glow sutil en la esquina superior izquierda */}
+                    <View
+                      style={[
+                        styles.cornerGlow,
+                        { backgroundColor: item.accent },
+                        isHero && { opacity: 0.22, width: 90, height: 90 },
+                      ]}
+                      pointerEvents="none"
+                    />
 
-                    <View style={styles.cardContent}>
-                      <View style={styles.cardHeaderRow}>
-                        <View style={styles.iconBox}>
-                          <Text style={styles.menuIcon}>{item.icon}</Text>
+                    <View style={styles.bentoBody}>
+                      {/* Fila superior: Ícono circular + Badge o Flecha */}
+                      <View style={styles.bentoTop}>
+                        <View style={[styles.iconCircle, { borderColor: `${item.accent}33` }]}>
+                          <Text style={styles.bentoIcon}>{item.icon}</Text>
                         </View>
-                        <Text style={styles.arrowIcon}>›</Text>
+
+                        {item.badge ? (
+                          <View style={[styles.badgePill, { borderColor: `${item.accent}66` }]}>
+                            <View style={[styles.pulseDot, { backgroundColor: item.accent }]} />
+                            <Text style={[styles.badgePillText, { color: item.accent }]}>
+                              {item.badge}
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={styles.chevronBox}>
+                            <Text style={styles.chevron}>↗</Text>
+                          </View>
+                        )}
                       </View>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.itemTitle}>{item.title}</Text>
-                        <Text style={styles.itemDesc} numberOfLines={2}>
+                      {/* Textos */}
+                      <View style={styles.bentoInfo}>
+                        <Text style={[styles.bentoTitle, isHero && styles.heroBentoTitle]}>
+                          {item.title}
+                        </Text>
+                        <Text style={styles.bentoDesc} numberOfLines={2}>
                           {item.desc}
                         </Text>
+                      </View>
+
+                      {/* Barra de progreso / acento al pie */}
+                      <View style={styles.bottomBarTrack}>
+                        <View
+                          style={[
+                            styles.bottomBarFill,
+                            { backgroundColor: item.accent },
+                            isHero && { width: '100%' },
+                          ]}
+                        />
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -228,18 +268,31 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Theme.spacing.lg,
-    paddingBottom: 48,
-    maxWidth: 920,
+    paddingBottom: 56,
+    maxWidth: 960,
     alignSelf: 'center',
     width: '100%',
-    gap: Theme.spacing.xl,
+    gap: 28,
   },
-  headerCard: {
-    backgroundColor: Theme.bg.card,
+  // Hero Card
+  heroCard: {
+    backgroundColor: '#121214',
     borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.lg,
+    padding: Theme.spacing.xl,
     borderWidth: 1,
-    borderColor: Theme.border.subtle,
+    borderColor: '#26262b',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  heroGlow: {
+    position: 'absolute',
+    top: -60,
+    right: -40,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: Theme.accent.DEFAULT,
+    opacity: 0.08,
   },
   headerTop: {
     flexDirection: 'row',
@@ -250,42 +303,51 @@ const styles = StyleSheet.create({
   brandGroup: {
     flex: 1,
   },
-  badgeLeague: {
+  leagueTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingHorizontal: Theme.spacing.sm,
-    paddingVertical: 3,
-    borderRadius: Theme.radius.sm,
-    backgroundColor: Theme.accent.dim,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    backgroundColor: 'rgba(125, 211, 252, 0.08)',
     borderWidth: 1,
-    borderColor: Theme.border.active,
-    marginBottom: Theme.spacing.xs,
+    borderColor: 'rgba(125, 211, 252, 0.25)',
+    gap: 6,
+    marginBottom: 10,
   },
-  badgeLeagueText: {
+  leagueDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: Theme.accent.DEFAULT,
+  },
+  leagueTagText: {
     fontSize: 10,
     fontWeight: Theme.font.weight.black,
     color: Theme.accent.DEFAULT,
-    letterSpacing: Theme.font.letterSpacing.wide,
+    letterSpacing: 1.2,
   },
   title: {
-    fontSize: Theme.font.size.xxl,
-    fontWeight: Theme.font.weight.bold,
+    fontSize: 26,
+    fontWeight: Theme.font.weight.black,
     color: Theme.text.primary,
-    letterSpacing: Theme.font.letterSpacing.tight,
+    letterSpacing: -0.6,
   },
-  leadText: {
-    fontSize: Theme.font.size.xs,
+  subtitle: {
+    fontSize: Theme.font.size.sm,
     color: Theme.text.secondary,
-    marginTop: 4,
-    lineHeight: 18,
+    marginTop: 6,
+    lineHeight: 20,
+    maxWidth: 580,
   },
   logoutBtn: {
-    backgroundColor: Theme.status.danger.bg,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
-    borderColor: Theme.status.danger.border,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: Theme.radius.sm,
-    minHeight: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -296,54 +358,72 @@ const styles = StyleSheet.create({
   },
   loginBtn: {
     backgroundColor: Theme.accent.DEFAULT,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: Theme.radius.sm,
-    minHeight: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
   loginBtnText: {
     color: '#0A0A0A',
     fontSize: Theme.font.size.xs,
-    fontWeight: Theme.font.weight.bold,
+    fontWeight: Theme.font.weight.black,
+    letterSpacing: 0.5,
   },
-  userBadge: {
-    marginTop: Theme.spacing.md,
-    paddingTop: Theme.spacing.sm,
+  userBar: {
+    marginTop: Theme.spacing.lg,
+    paddingTop: Theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Theme.border.subtle,
+    borderTopColor: '#202024',
+  },
+  userStatus: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  userStatusDot: {
+  statusIndicator: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    marginRight: 8,
   },
   userText: {
     fontSize: Theme.font.size.xs,
     color: Theme.text.secondary,
     fontWeight: Theme.font.weight.semibold,
   },
-  sectionBlock: {
-    gap: Theme.spacing.sm,
+
+  // Secciones
+  sectionWrap: {
+    gap: 12,
   },
-  sectionTitle: {
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingLeft: 2,
+  },
+  sectionBullet: {
+    width: 3,
+    height: 12,
+    borderRadius: 1.5,
+    backgroundColor: Theme.accent.DEFAULT,
+  },
+  sectionHeading: {
     ...sectionLabelStyle,
     color: Theme.text.secondary,
     fontSize: Theme.font.size.xs,
-    paddingLeft: 2,
   },
-  grid: {
-    gap: Theme.spacing.sm,
+  bentoGrid: {
+    gap: 12,
   },
-  card: {
-    flexDirection: 'row',
-    backgroundColor: Theme.bg.card,
+
+  // Bento Card
+  bentoCard: {
+    backgroundColor: '#151518',
     borderRadius: Theme.radius.md,
     borderWidth: 1,
+    borderColor: '#242429',
+    position: 'relative',
     overflow: 'hidden',
     ...Platform.select({
       web: {
@@ -352,53 +432,103 @@ const styles = StyleSheet.create({
       } as any,
     }),
   },
-  cardHighlight: {
-    backgroundColor: '#140c0c',
+  heroBentoCard: {
+    backgroundColor: '#1a1012',
+    borderColor: '#3f1a1e',
   },
-  franja: {
-    width: 3.5,
+  cornerGlow: {
+    position: 'absolute',
+    top: -30,
+    left: -30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    opacity: 0.12,
   },
-  cardContent: {
-    flex: 1,
-    padding: Theme.spacing.md,
-    gap: Theme.spacing.xs,
+  bentoBody: {
+    padding: 16,
+    gap: 12,
   },
-  cardHeaderRow: {
+  bentoTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: Theme.radius.sm,
-    backgroundColor: Theme.bg.input,
+  iconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#1b1b20',
     borderWidth: 1,
-    borderColor: Theme.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  menuIcon: {
-    fontSize: 18,
+  bentoIcon: {
+    fontSize: 20,
   },
-  arrowIcon: {
-    fontSize: 22,
+  chevronBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1b1b20',
+    borderWidth: 1,
+    borderColor: '#2a2a30',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chevron: {
     color: Theme.text.secondary,
-    lineHeight: 22,
-    fontWeight: '300',
+    fontSize: 14,
+    fontWeight: '700',
   },
-  textContainer: {
-    gap: 2,
-    marginTop: 2,
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
   },
-  itemTitle: {
+  pulseDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  badgePillText: {
+    fontSize: 10,
+    fontWeight: Theme.font.weight.black,
+    letterSpacing: 0.8,
+  },
+  bentoInfo: {
+    gap: 4,
+  },
+  bentoTitle: {
     fontSize: Theme.font.size.md,
     fontWeight: Theme.font.weight.bold,
     color: Theme.text.primary,
+    letterSpacing: -0.2,
   },
-  itemDesc: {
+  heroBentoTitle: {
+    fontSize: Theme.font.size.lg,
+    color: '#FCA5A5',
+  },
+  bentoDesc: {
     fontSize: Theme.font.size.xs,
     color: Theme.text.secondary,
-    lineHeight: 16,
+    lineHeight: 17,
+  },
+  bottomBarTrack: {
+    height: 2,
+    backgroundColor: '#1f1f26',
+    borderRadius: 1,
+    overflow: 'hidden',
+    marginTop: 2,
+  },
+  bottomBarFill: {
+    width: 24,
+    height: '100%',
+    borderRadius: 1,
   },
 });
