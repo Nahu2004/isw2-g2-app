@@ -1,94 +1,126 @@
+// Dashboard Principal — Liga Amateur Santafesina
+// Diseño Premium Oscuro alineado a Theme (paleta de Reglamento, Equipos, Jugadores, Partidos)
+// Sin etiquetas internas ("Módulo 1, 2...", "Público", "Operativo")
+
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, GradientBackground } from '@/components/common';
+import { Theme, sectionLabelStyle } from '@/constants/theme';
+
+interface DashboardItem {
+  title: string;
+  desc: string;
+  route: string;
+  icon: string;
+  accentColor?: string;
+  highlight?: boolean;
+}
+
+interface DashboardSection {
+  title: string;
+  items: DashboardItem[];
+}
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user, logoutUser } = useAuth();
 
-  const modulo1Items = [
+  const sections: DashboardSection[] = [
     {
-      title: 'Tabla de Posiciones',
-      desc: 'Clasificación oficial calculada desde los resultados y diferencia de goles',
-      route: '/tabla',
-      icon: '🏆',
-      tag: 'PÚBLICO',
-      color: '#0284c7',
-      bgIcon: '#e0f2fe',
+      title: 'Torneo y Competencia',
+      items: [
+        {
+          title: 'Tabla de Posiciones',
+          desc: 'Clasificación oficial calculada desde resultados, puntos y diferencia de goles',
+          route: '/tabla',
+          icon: '🏆',
+          accentColor: Theme.accent.DEFAULT,
+        },
+        {
+          title: 'Fixture y Partidos',
+          desc: 'Encuentros por fecha, tanteador y cronología de incidencias',
+          route: '/fixture',
+          icon: '⚽',
+          accentColor: '#38BDF8',
+        },
+      ],
     },
     {
-      title: 'Fixture y Partidos',
-      desc: 'Lista de encuentros por fecha, resultados y detalle minuto a minuto con incidencias',
-      route: '/fixture',
-      icon: '⚽',
-      tag: 'PÚBLICO',
-      color: '#059669',
-      bgIcon: '#ecfdf5',
-    },
-  ];
-
-  const modulo2Items = [
-    {
-      title: 'Partido en Vivo',
-      desc: 'Control de ciclo de vida (RN-05), cronómetro y registro de incidencias en tiempo real',
-      route: '/partido-en-vivo?id=1',
-      icon: '🔴',
-      tag: 'OPERATIVO',
-      color: '#dc2626',
-      bgIcon: '#fef2f2',
-    },
-  ];
-
-  const modulo3Items = [
-    {
-      title: 'Equipos',
-      desc: 'Alta, edición y baja lógica de clubes federados por torneo',
-      route: '/equipos',
-      icon: '🛡️',
-      color: '#2563eb',
-      bgIcon: '#eff6ff',
+      title: 'Operación en Directo',
+      items: [
+        {
+          title: 'Partido en Vivo',
+          desc: 'Panel de control de incidencias, cronómetro y cambio de etapas del partido',
+          route: '/partido-en-vivo?id=1',
+          icon: '🔴',
+          accentColor: Theme.status.danger.text,
+          highlight: true,
+        },
+      ],
     },
     {
-      title: 'Jugadores',
-      desc: 'Planteles, asignación de dorsales y control de DNI único',
-      route: '/jugadores',
-      icon: '🏃',
-      color: '#059669',
-      bgIcon: '#ecfdf5',
-    },
-    {
-      title: 'Catálogos y Torneos',
-      desc: 'Gestión de torneos oficiales, predios/canchas y colegiados arbitrales',
-      route: '/catalogos',
-      icon: '📋',
-      color: '#d97706',
-      bgIcon: '#fffbeb',
-    },
-    {
-      title: 'Programar Partidos',
-      desc: 'Fijar fixture con validación automática de solapamiento de 2 horas',
-      route: '/partidos',
-      icon: '⚽',
-      color: '#7c3aed',
-      bgIcon: '#f5f3ff',
-    },
-    {
-      title: 'Reglamento y Sanciones',
-      desc: 'Consulta de suspendidos por fecha, bloqueos y validación de horarios',
-      route: '/reglamento',
-      icon: '⚖️',
-      color: '#4f46e5',
-      bgIcon: '#eef2ff',
+      title: 'Gestión y Administración',
+      items: [
+        {
+          title: 'Equipos',
+          desc: 'Registro, edición y control de clubes federados por torneo',
+          route: '/equipos',
+          icon: '🛡️',
+          accentColor: '#60A5FA',
+        },
+        {
+          title: 'Jugadores',
+          desc: 'Planteles oficiales, números de camiseta y control de DNI único',
+          route: '/jugadores',
+          icon: '🏃',
+          accentColor: Theme.status.success.text,
+        },
+        {
+          title: 'Catálogos Oficiales',
+          desc: 'Torneos vigentes, predios/canchas habilitadas y cuerpo de árbitros',
+          route: '/catalogos',
+          icon: '📋',
+          accentColor: Theme.status.warning.text,
+        },
+        {
+          title: 'Programar Partidos',
+          desc: 'Asignación de fixture con control estricto de solapamientos horarios',
+          route: '/partidos',
+          icon: '🗓️',
+          accentColor: '#C084FC',
+        },
+        {
+          title: 'Reglamento y Sanciones',
+          desc: 'Control de suspendidos por fecha, bloqueos y disponibilidad de canchas y árbitros',
+          route: '/reglamento',
+          icon: '⚖️',
+          accentColor: Theme.accent.DEFAULT,
+        },
+      ],
     },
   ];
 
   return (
-    <GradientBackground>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor={Theme.bg.base} />
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Banner de Bienvenida y Header */}
-        <View style={styles.header}>
+        <View style={styles.headerCard}>
           <View style={styles.headerTop}>
             <View style={styles.brandGroup}>
               <View style={styles.badgeLeague}>
@@ -99,6 +131,7 @@ export default function HomeScreen() {
                 Sistema Oficial de Gestión Deportiva y Operación de Encuentros
               </Text>
             </View>
+
             {user ? (
               <TouchableOpacity
                 onPress={() => logoutUser()}
@@ -118,321 +151,254 @@ export default function HomeScreen() {
             )}
           </View>
 
+          {/* Estado de sesión */}
           <View style={styles.userBadge}>
-            <View style={[styles.userStatusDot, { backgroundColor: user ? '#10b981' : '#94a3b8' }]} />
+            <View
+              style={[
+                styles.userStatusDot,
+                { backgroundColor: user ? Theme.status.success.text : Theme.text.secondary },
+              ]}
+            />
             <Text style={styles.userText}>
               {user ? `${user.nombreCompleto} • ${user.rol}` : 'Modo Invitado (Solo Lectura)'}
             </Text>
           </View>
         </View>
 
-        {/* Módulo 1: Vista Pública */}
-        <View style={styles.sectionHeadingRow}>
-          <Text style={styles.sectionTitle}>Módulo 1: Vista Pública (Sin Login)</Text>
-          <View style={[styles.sectionTag, { backgroundColor: '#e0f2fe' }]}>
-            <Text style={[styles.sectionTagText, { color: '#0369a1' }]}>LIBRE</Text>
-          </View>
-        </View>
+        {/* Secciones del Dashboard */}
+        {sections.map((section, sIdx) => (
+          <View key={section.title} style={styles.sectionBlock}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
 
-        {modulo1Items.map((item) => (
-          <TouchableOpacity
-            key={item.route}
-            activeOpacity={0.88}
-            onPress={() => router.push(item.route as any)}
-          >
-            <Card style={styles.menuCard}>
-              <View style={[styles.iconContainer, { backgroundColor: item.bgIcon }]}>
-                <Text style={styles.menuIcon}>{item.icon}</Text>
-              </View>
-              <View style={styles.menuInfo}>
-                <View style={styles.titleWithTag}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  {item.tag && (
-                    <View style={[styles.livePill, { backgroundColor: '#e0f2fe' }]}>
-                      <Text style={[styles.livePillText, { color: '#0369a1' }]}>{item.tag}</Text>
+            <View style={styles.grid}>
+              {section.items.map((item) => {
+                const borderActiveColor = item.highlight
+                  ? Theme.status.danger.border
+                  : Theme.border.subtle;
+                const franjaColor = item.accentColor || Theme.accent.DEFAULT;
+
+                return (
+                  <TouchableOpacity
+                    key={item.route}
+                    style={[
+                      styles.card,
+                      item.highlight && styles.cardHighlight,
+                      { borderColor: borderActiveColor },
+                    ]}
+                    activeOpacity={0.82}
+                    onPress={() => router.push(item.route as any)}
+                  >
+                    {/* Franja lateral indicadora */}
+                    <View style={[styles.franja, { backgroundColor: franjaColor }]} />
+
+                    <View style={styles.cardContent}>
+                      <View style={styles.cardHeaderRow}>
+                        <View style={styles.iconBox}>
+                          <Text style={styles.menuIcon}>{item.icon}</Text>
+                        </View>
+                        <Text style={styles.arrowIcon}>›</Text>
+                      </View>
+
+                      <View style={styles.textContainer}>
+                        <Text style={styles.itemTitle}>{item.title}</Text>
+                        <Text style={styles.itemDesc} numberOfLines={2}>
+                          {item.desc}
+                        </Text>
+                      </View>
                     </View>
-                  )}
-                </View>
-                <Text style={styles.itemDesc}>{item.desc}</Text>
-              </View>
-              <View style={styles.arrowContainer}>
-                <Text style={styles.arrow}>→</Text>
-              </View>
-            </Card>
-          </TouchableOpacity>
-        ))}
-
-        {/* Módulo 2: Operación en Vivo */}
-        <View style={[styles.sectionHeadingRow, { marginTop: 24 }]}>
-          <Text style={styles.sectionTitle}>Módulo 2: Operación en Vivo</Text>
-          <View style={styles.sectionTag}>
-            <Text style={styles.sectionTagText}>PRIORIDAD</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
-        </View>
-
-        {modulo2Items.map((item) => (
-          <TouchableOpacity
-            key={item.route}
-            activeOpacity={0.88}
-            onPress={() => router.push(item.route as any)}
-          >
-            <Card style={StyleSheet.flatten([styles.menuCard, styles.menuCardLive])}>
-              <View style={[styles.iconContainer, { backgroundColor: item.bgIcon }]}>
-                <Text style={styles.menuIcon}>{item.icon}</Text>
-              </View>
-              <View style={styles.menuInfo}>
-                <View style={styles.titleWithTag}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  {item.tag && (
-                    <View style={styles.livePill}>
-                      <Text style={styles.livePillText}>{item.tag}</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.itemDesc}>{item.desc}</Text>
-              </View>
-              <View style={styles.arrowContainer}>
-                <Text style={styles.arrow}>→</Text>
-              </View>
-            </Card>
-          </TouchableOpacity>
-        ))}
-
-        {/* Módulo 3: Administración y Torneos */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
-          Módulo 3: Administración y Torneos
-        </Text>
-        {modulo3Items.map((item) => (
-          <TouchableOpacity
-            key={item.route}
-            activeOpacity={0.88}
-            onPress={() => router.push(item.route as any)}
-          >
-            <Card style={styles.menuCard}>
-              <View style={[styles.iconContainer, { backgroundColor: item.bgIcon }]}>
-                <Text style={styles.menuIcon}>{item.icon}</Text>
-              </View>
-              <View style={styles.menuInfo}>
-                <Text style={styles.itemTitle}>{item.title}</Text>
-                <Text style={styles.itemDesc}>{item.desc}</Text>
-              </View>
-              <View style={styles.arrowContainer}>
-                <Text style={styles.arrow}>→</Text>
-              </View>
-            </Card>
-          </TouchableOpacity>
         ))}
       </ScrollView>
-    </GradientBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Theme.bg.base,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Theme.bg.base,
   },
   content: {
-    padding: 18,
-    paddingBottom: 40,
-    maxWidth: 860,
+    padding: Theme.spacing.lg,
+    paddingBottom: 48,
+    maxWidth: 920,
     alignSelf: 'center',
     width: '100%',
+    gap: Theme.spacing.xl,
   },
-  header: {
-    marginBottom: 24,
-    backgroundColor: '#ffffff',
-    padding: 22,
-    borderRadius: 16,
+  headerCard: {
+    backgroundColor: Theme.bg.card,
+    borderRadius: Theme.radius.lg,
+    padding: Theme.spacing.lg,
     borderWidth: 1,
-    borderColor: 'rgba(226, 232, 240, 0.9)',
-    ...Platform.select({
-      web: {
-        boxShadow: '0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.03)',
-      } as any,
-    }),
+    borderColor: Theme.border.subtle,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: Theme.spacing.md,
   },
   brandGroup: {
     flex: 1,
   },
   badgeLeague: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
+    paddingHorizontal: Theme.spacing.sm,
     paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: '#f0fdf4',
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.accent.dim,
     borderWidth: 1,
-    borderColor: '#bbf7d0',
-    marginBottom: 8,
+    borderColor: Theme.border.active,
+    marginBottom: Theme.spacing.xs,
   },
   badgeLeagueText: {
     fontSize: 10,
-    fontWeight: '800',
-    color: '#166534',
-    letterSpacing: 0.8,
+    fontWeight: Theme.font.weight.black,
+    color: Theme.accent.DEFAULT,
+    letterSpacing: Theme.font.letterSpacing.wide,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0f172a',
-    letterSpacing: -0.4,
+    fontSize: Theme.font.size.xxl,
+    fontWeight: Theme.font.weight.bold,
+    color: Theme.text.primary,
+    letterSpacing: Theme.font.letterSpacing.tight,
   },
   leadText: {
-    fontSize: 13,
-    color: '#64748b',
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
     marginTop: 4,
     lineHeight: 18,
   },
   logoutBtn: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: Theme.status.danger.bg,
+    borderWidth: 1,
+    borderColor: Theme.status.danger.border,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: Theme.radius.sm,
     minHeight: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoutBtnText: {
-    color: '#b91c1c',
-    fontSize: 12,
-    fontWeight: '700',
+    color: Theme.status.danger.text,
+    fontSize: Theme.font.size.xs,
+    fontWeight: Theme.font.weight.bold,
   },
   loginBtn: {
-    backgroundColor: '#0284c7',
+    backgroundColor: Theme.accent.DEFAULT,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: Theme.radius.sm,
     minHeight: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
   loginBtnText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '700',
+    color: '#0A0A0A',
+    fontSize: Theme.font.size.xs,
+    fontWeight: Theme.font.weight.bold,
   },
   userBadge: {
-    marginTop: 16,
-    paddingTop: 14,
+    marginTop: Theme.spacing.md,
+    paddingTop: Theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: Theme.border.subtle,
     flexDirection: 'row',
     alignItems: 'center',
   },
   userStatusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     marginRight: 8,
   },
   userText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '600',
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.semibold,
   },
-  sectionHeadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+  sectionBlock: {
+    gap: Theme.spacing.sm,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#475569',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    ...sectionLabelStyle,
+    color: Theme.text.secondary,
+    fontSize: Theme.font.size.xs,
+    paddingLeft: 2,
   },
-  sectionTag: {
-    backgroundColor: '#fee2e2',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+  grid: {
+    gap: Theme.spacing.sm,
   },
-  sectionTagText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#dc2626',
-  },
-  menuCard: {
+  card: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 14,
-    marginBottom: 10,
+    backgroundColor: Theme.bg.card,
+    borderRadius: Theme.radius.md,
+    borderWidth: 1,
+    overflow: 'hidden',
     ...Platform.select({
       web: {
         cursor: 'pointer',
-        transition: 'transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+        transition: 'transform 0.16s ease, border-color 0.16s ease, background-color 0.16s ease',
       } as any,
     }),
   },
-  menuCardLive: {
-    borderColor: '#fca5a5',
-    backgroundColor: '#ffffff',
+  cardHighlight: {
+    backgroundColor: '#140c0c',
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
+  franja: {
+    width: 3.5,
+  },
+  cardContent: {
+    flex: 1,
+    padding: Theme.spacing.md,
+    gap: Theme.spacing.xs,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginRight: 14,
+  },
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.bg.input,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.04)',
+    borderColor: Theme.border.subtle,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   menuIcon: {
+    fontSize: 18,
+  },
+  arrowIcon: {
     fontSize: 22,
+    color: Theme.text.secondary,
+    lineHeight: 22,
+    fontWeight: '300',
   },
-  menuInfo: {
-    flex: 1,
-  },
-  titleWithTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  textContainer: {
+    gap: 2,
+    marginTop: 2,
   },
   itemTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0f172a',
-    letterSpacing: -0.2,
-  },
-  livePill: {
-    backgroundColor: '#fee2e2',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  livePillText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#b91c1c',
+    fontSize: Theme.font.size.md,
+    fontWeight: Theme.font.weight.bold,
+    color: Theme.text.primary,
   },
   itemDesc: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 3,
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
     lineHeight: 16,
-  },
-  arrowContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 10,
-  },
-  arrow: {
-    fontSize: 14,
-    color: '#94a3b8',
-    fontWeight: '700',
   },
 });
