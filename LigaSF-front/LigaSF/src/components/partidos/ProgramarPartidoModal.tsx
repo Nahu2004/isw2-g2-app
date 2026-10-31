@@ -1,14 +1,17 @@
-﻿import React, { useState, useEffect } from 'react';
+// Modal de Programar Partido — diseño premium oscuro alineado a LigaSF
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Modal,
   ScrollView,
-  Alert,
+  TextInput,
   TouchableOpacity,
+  Alert,
+  Platform,
 } from 'react-native';
-import { InputField, Button } from '@/components/common';
+import { Theme, sectionLabelStyle } from '@/constants/theme';
 import { Torneo, Equipo, Cancha, Arbitro } from '@/api/types';
 import { getTorneos, getCanchas, getArbitros } from '@/api/catalogosApi';
 import { getEquipos } from '@/api/equiposApi';
@@ -34,13 +37,11 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
   onSubmit,
   torneoIdDefault,
 }) => {
-  // Datos para selectores
   const [torneos, setTorneos] = useState<Torneo[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
   const [canchas, setCanchas] = useState<Cancha[]>([]);
   const [arbitros, setArbitros] = useState<Arbitro[]>([]);
 
-  // Campos del formulario
   const [torneoId, setTorneoId] = useState<number | null>(null);
   const [numeroFecha, setNumeroFecha] = useState('1');
   const [equipoLocalId, setEquipoLocalId] = useState<number | null>(null);
@@ -48,7 +49,6 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
   const [canchaId, setCanchaId] = useState<number | null>(null);
   const [arbitroId, setArbitroId] = useState<number | null>(null);
 
-  // Fecha y hora (formato ISO YYYY-MM-DDTHH:mm:00)
   const hoyStr = new Date().toISOString().split('T')[0];
   const [fechaStr, setFechaStr] = useState(hoyStr);
   const [horaStr, setHoraStr] = useState('15:00');
@@ -90,7 +90,7 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
       if (listaCanchas.length > 0) setCanchaId(listaCanchas[0].id);
       if (listaArbitros.length > 0) setArbitroId(listaArbitros[0].id);
     } catch {
-      // Ignorar si falla la precarga
+      // Ignorar
     }
   };
 
@@ -110,6 +110,14 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
       }
     } catch {
       setEquipos([]);
+    }
+  };
+
+  const notificar = (titulo: string, mensaje: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${titulo}: ${mensaje}`);
+    } else {
+      Alert.alert(titulo, mensaje);
     }
   };
 
@@ -143,16 +151,16 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
   const handleGuardar = async () => {
     if (!validar()) {
       const primerError = Object.values(errores)[0] || 'Por favor complete todos los campos requeridos.';
-      Alert.alert('Datos Incompletos', primerError);
+      notificar('Datos Incompletos', primerError);
       return;
     }
 
     if (!torneoId || !equipoLocalId || !equipoVisitanteId || !canchaId || !arbitroId) {
-      Alert.alert(
+      notificar(
         'Faltan datos',
         equipos.length < 2
-          ? 'El torneo seleccionado necesita al menos 2 equipos registrados para programar un partido.'
-          : 'Por favor seleccione torneo, equipos, cancha y árbitro.'
+          ? 'El torneo seleccionado necesita al menos 2 equipos registrados.'
+          : 'Por favor complete todas las selecciones.'
       );
       return;
     }
@@ -161,7 +169,6 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
 
     try {
       setSubmitting(true);
-      console.log('ENVIANDO PARTIDO:', { torneoId, numeroFecha: parseInt(numeroFecha, 10), equipoLocalId, equipoVisitanteId, canchaId, arbitroId, fechaHoraInicio });
       await onSubmit({
         torneoId,
         numeroFecha: parseInt(numeroFecha, 10),
@@ -173,10 +180,7 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
       });
       onClose();
     } catch (e: any) {
-      Alert.alert(
-        'Conflicto / Error de Programación',
-        e.message || 'No se pudo programar el partido en el servidor.'
-      );
+      notificar('Conflicto / Error', e.message || 'No se pudo programar el partido');
     } finally {
       setSubmitting(false);
     }
@@ -186,155 +190,201 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.title}>⚽ Programar Nuevo Partido</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>PROGRAMAR PARTIDO</Text>
+            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Text style={styles.closeBtn}>✕</Text>
+            </TouchableOpacity>
+          </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {/* TORNEO */}
-            <Text style={styles.label}>1. Torneo:</Text>
-            {errores.torneoId ? <Text style={styles.errorText}>⚠️ {errores.torneoId}</Text> : null}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
-              {torneos.map((t) => (
-                <TouchableOpacity
-                  key={t.id}
-                  style={[styles.pill, torneoId === t.id && styles.pillActive]}
-                  onPress={() => setTorneoId(t.id)}
-                >
-                  <Text style={[styles.pillText, torneoId === t.id && styles.pillTextActive]}>
-                    {t.nombre}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {/* NÚMERO DE FECHA */}
-            <InputField
-              label="2. Número de Fecha:"
-              placeholder="Ej: 1"
-              keyboardType="number-pad"
-              value={numeroFecha}
-              onChangeText={setNumeroFecha}
-              error={errores.numeroFecha}
-            />
-
-            {/* ENFRENTAMIENTO */}
-            <Text style={styles.label}>3. Equipos del Encuentro:</Text>
-            {errores.equipos ? <Text style={styles.errorText}>⚠️ {errores.equipos}</Text> : null}
-            {errores.equipoLocalId ? (
-              <Text style={styles.errorText}>⚠️ {errores.equipoLocalId}</Text>
-            ) : null}
-            {errores.equipoVisitanteId ? (
-              <Text style={styles.errorText}>⚠️ {errores.equipoVisitanteId}</Text>
-            ) : null}
-
-            {equipos.length < 2 && (
-              <Text style={styles.warningText}>
-                ⚠️ Este torneo cuenta con {equipos.length} equipo(s). Se requieren al menos 2 equipos para programar.
-              </Text>
-            )}
-
-            <Text style={styles.subLabel}>🏠 Equipo Local:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
-              {equipos.map((eq) => (
-                <TouchableOpacity
-                  key={`loc-${eq.id}`}
-                  style={[styles.pill, equipoLocalId === eq.id && styles.pillActive]}
-                  onPress={() => setEquipoLocalId(eq.id)}
-                >
-                  <Text style={[styles.pillText, equipoLocalId === eq.id && styles.pillTextActive]}>
-                    {eq.nombre}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            <Text style={styles.subLabel}>🚌 Equipo Visitante:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
-              {equipos.map((eq) => (
-                <TouchableOpacity
-                  key={`vis-${eq.id}`}
-                  style={[styles.pill, equipoVisitanteId === eq.id && styles.pillActiveVisitante]}
-                  onPress={() => setEquipoVisitanteId(eq.id)}
-                >
-                  <Text style={[styles.pillText, equipoVisitanteId === eq.id && styles.pillTextActive]}>
-                    {eq.nombre}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {/* CANCHA */}
-            <Text style={styles.label}>4. Cancha / Predio:</Text>
-            {errores.canchaId ? <Text style={styles.errorText}>⚠️ {errores.canchaId}</Text> : null}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
-              {canchas.map((c) => (
-                <TouchableOpacity
-                  key={c.id}
-                  style={[styles.pill, canchaId === c.id && styles.pillActive]}
-                  onPress={() => setCanchaId(c.id)}
-                >
-                  <Text style={[styles.pillText, canchaId === c.id && styles.pillTextActive]}>
-                    🏟️ {c.nombre}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {/* ÁRBITRO */}
-            <Text style={styles.label}>5. Árbitro Designado:</Text>
-            {errores.arbitroId ? <Text style={styles.errorText}>⚠️ {errores.arbitroId}</Text> : null}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
-              {arbitros.map((a) => (
-                <TouchableOpacity
-                  key={a.id}
-                  style={[styles.pill, arbitroId === a.id && styles.pillActive]}
-                  onPress={() => setArbitroId(a.id)}
-                >
-                  <Text style={[styles.pillText, arbitroId === a.id && styles.pillTextActive]}>
-                    🧑‍⚖️ {a.apellido}, {a.nombre}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {/* FECHA Y HORA */}
-            <Text style={styles.label}>6. Día y Horario:</Text>
-            <View style={styles.row}>
-              <View style={styles.flex1}>
-                <InputField
-                  label="Fecha (AAAA-MM-DD)"
-                  placeholder="2026-11-01"
-                  value={fechaStr}
-                  onChangeText={setFechaStr}
-                  error={errores.fecha}
-                />
-              </View>
-              <View style={styles.flex1}>
-                <InputField
-                  label="Hora (HH:mm)"
-                  placeholder="15:00"
-                  value={horaStr}
-                  onChangeText={setHoraStr}
-                  error={errores.hora}
-                />
-              </View>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+            {/* 1. TORNEO */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>1. TORNEO</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
+                {torneos.map((t) => {
+                  const sel = torneoId === t.id;
+                  return (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={[styles.pill, sel && styles.pillActive]}
+                      onPress={() => setTorneoId(t.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                        {t.nombre}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              {errores.torneoId ? <Text style={styles.errorText}>{errores.torneoId}</Text> : null}
             </View>
 
-            <View style={styles.actions}>
-              <Button
-                title="Cancelar"
-                variant="secondary"
-                onPress={onClose}
-                style={styles.actionBtn}
-                disabled={submitting}
+            {/* 2. NÚMERO DE FECHA */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>2. NÚMERO DE FECHA</Text>
+              <TextInput
+                style={[styles.input, styles.tabularInput, !!errores.numeroFecha && styles.inputError]}
+                placeholder="1"
+                placeholderTextColor={Theme.text.secondary}
+                keyboardType="number-pad"
+                value={numeroFecha}
+                onChangeText={setNumeroFecha}
               />
-              <Button
-                title="Programar Partido"
-                onPress={handleGuardar}
-                style={styles.actionBtn}
-                loading={submitting}
-              />
+              {errores.numeroFecha ? <Text style={styles.errorText}>{errores.numeroFecha}</Text> : null}
+            </View>
+
+            {/* 3. EQUIPOS */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>3. ENFRENTAMIENTO</Text>
+              {errores.equipos ? <Text style={styles.errorText}>{errores.equipos}</Text> : null}
+
+              {equipos.length < 2 && (
+                <View style={styles.warningBox}>
+                  <Text style={styles.warningText}>
+                    ⚠️ Este torneo tiene {equipos.length} equipo(s). Se requieren al menos 2 equipos.
+                  </Text>
+                </View>
+              )}
+
+              <Text style={styles.subLabel}>🏠 EQUIPO LOCAL</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
+                {equipos.map((eq) => {
+                  const sel = equipoLocalId === eq.id;
+                  return (
+                    <TouchableOpacity
+                      key={`loc-${eq.id}`}
+                      style={[styles.pill, sel && styles.pillActive]}
+                      onPress={() => setEquipoLocalId(eq.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                        {eq.nombre}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              <Text style={styles.subLabel}>🚌 EQUIPO VISITANTE</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
+                {equipos.map((eq) => {
+                  const sel = equipoVisitanteId === eq.id;
+                  return (
+                    <TouchableOpacity
+                      key={`vis-${eq.id}`}
+                      style={[styles.pill, sel && styles.pillActiveAccent]}
+                      onPress={() => setEquipoVisitanteId(eq.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.pillText, sel && styles.pillTextActiveAccent]}>
+                        {eq.nombre}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {/* 4. CANCHA */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>4. CANCHA / PREDIO</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
+                {canchas.map((c) => {
+                  const sel = canchaId === c.id;
+                  return (
+                    <TouchableOpacity
+                      key={c.id}
+                      style={[styles.pill, sel && styles.pillActive]}
+                      onPress={() => setCanchaId(c.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                        🏟️ {c.nombre}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              {errores.canchaId ? <Text style={styles.errorText}>{errores.canchaId}</Text> : null}
+            </View>
+
+            {/* 5. ÁRBITRO */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>5. ÁRBITRO DESIGNADO</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
+                {arbitros.map((a) => {
+                  const sel = arbitroId === a.id;
+                  return (
+                    <TouchableOpacity
+                      key={a.id}
+                      style={[styles.pill, sel && styles.pillActive]}
+                      onPress={() => setArbitroId(a.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                        🧑‍⚖️ {a.apellido}, {a.nombre}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              {errores.arbitroId ? <Text style={styles.errorText}>{errores.arbitroId}</Text> : null}
+            </View>
+
+            {/* 6. DÍA Y HORA */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>6. DÍA Y HORARIO</Text>
+              <View style={styles.row}>
+                <View style={{ flex: 1.5 }}>
+                  <Text style={styles.subLabel}>FECHA (AAAA-MM-DD)</Text>
+                  <TextInput
+                    style={[styles.input, styles.tabularInput, !!errores.fecha && styles.inputError]}
+                    placeholder="2026-10-31"
+                    placeholderTextColor={Theme.text.secondary}
+                    value={fechaStr}
+                    onChangeText={setFechaStr}
+                  />
+                  {errores.fecha ? <Text style={styles.errorText}>{errores.fecha}</Text> : null}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.subLabel}>HORA (HH:mm)</Text>
+                  <TextInput
+                    style={[styles.input, styles.tabularInput, !!errores.hora && styles.inputError]}
+                    placeholder="15:00"
+                    placeholderTextColor={Theme.text.secondary}
+                    value={horaStr}
+                    onChangeText={setHoraStr}
+                  />
+                  {errores.hora ? <Text style={styles.errorText}>{errores.hora}</Text> : null}
+                </View>
+              </View>
             </View>
           </ScrollView>
+
+          {/* Footer de Acciones */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={onClose}
+              disabled={submitting}
+            >
+              <Text style={styles.cancelBtnText}>Cancelar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.submitBtn, submitting && styles.btnDisabled]}
+              onPress={handleGuardar}
+              disabled={submitting}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.submitBtnText}>
+                {submitting ? 'Programando...' : 'Programar Partido'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -344,94 +394,159 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 18,
+    backgroundColor: Theme.bg.card,
+    borderTopLeftRadius: Theme.radius.lg,
+    borderTopRightRadius: Theme.radius.lg,
+    borderWidth: 1,
+    borderColor: Theme.border.subtle,
     maxHeight: '90%',
+    padding: Theme.spacing.lg,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+    paddingBottom: Theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.border.subtle,
   },
   title: {
-    fontSize: 19,
+    ...sectionLabelStyle,
+    color: Theme.text.primary,
+    fontSize: Theme.font.size.md,
+  },
+  closeBtn: {
+    color: Theme.text.secondary,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#0f172a',
-    marginBottom: 12,
-    textAlign: 'center',
+  },
+  scroll: {
+    paddingBottom: Theme.spacing.md,
+    gap: Theme.spacing.md,
+  },
+  fieldGroup: {
+    gap: Theme.spacing.xs,
   },
   label: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginTop: 8,
-    marginBottom: 6,
+    ...sectionLabelStyle,
+    color: Theme.text.secondary,
   },
   subLabel: {
-    fontSize: 13,
-    color: '#64748b',
-    fontWeight: '600',
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
     marginTop: 4,
-    marginBottom: 4,
+    marginBottom: 2,
+    fontWeight: '600',
   },
   horizPills: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginVertical: 4,
   },
   pill: {
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 16,
-    backgroundColor: '#f1f5f9',
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.bg.input,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: Theme.border.subtle,
     marginRight: 6,
   },
   pillActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+    backgroundColor: Theme.accent.dim,
+    borderColor: Theme.border.active,
   },
-  pillActiveVisitante: {
-    backgroundColor: '#8b5cf6',
-    borderColor: '#8b5cf6',
+  pillActiveAccent: {
+    backgroundColor: '#2E1065',
+    borderColor: '#A855F7',
   },
   pillText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '600',
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.semibold,
   },
   pillTextActive: {
-    color: '#ffffff',
+    color: Theme.accent.DEFAULT,
+  },
+  pillTextActiveAccent: {
+    color: '#D8B4FE',
+  },
+  input: {
+    backgroundColor: Theme.bg.input,
+    borderWidth: 1,
+    borderColor: Theme.border.subtle,
+    borderRadius: Theme.radius.sm,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    fontSize: Theme.font.size.md,
+    color: Theme.text.primary,
+  },
+  tabularInput: {
+    fontVariant: ['tabular-nums'],
+  },
+  inputError: {
+    borderColor: Theme.border.error,
   },
   errorText: {
-    color: '#dc2626',
-    fontSize: 12,
-    marginBottom: 4,
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.error,
+  },
+  warningBox: {
+    backgroundColor: Theme.status.warning.bg,
+    borderWidth: 1,
+    borderColor: Theme.status.warning.border,
+    padding: Theme.spacing.sm,
+    borderRadius: Theme.radius.sm,
+    marginVertical: 4,
   },
   warningText: {
-    color: '#d97706',
-    fontSize: 12,
-    marginVertical: 4,
-    backgroundColor: '#fef3c7',
-    padding: 8,
-    borderRadius: 8,
+    color: Theme.status.warning.text,
+    fontSize: Theme.font.size.xs,
   },
   row: {
     flexDirection: 'row',
-    gap: 10,
+    gap: Theme.spacing.sm,
   },
-  flex1: {
-    flex: 1,
-  },
-  actions: {
+  footer: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 16,
-    marginBottom: 8,
+    gap: Theme.spacing.sm,
+    paddingTop: Theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Theme.border.subtle,
   },
-  actionBtn: {
+  cancelBtn: {
     flex: 1,
+    paddingVertical: 12,
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.bg.input,
+    borderWidth: 1,
+    borderColor: Theme.border.subtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelBtnText: {
+    color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.semibold,
+    fontSize: Theme.font.size.sm,
+  },
+  submitBtn: {
+    flex: 2,
+    paddingVertical: 12,
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.accent.DEFAULT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnDisabled: {
+    opacity: 0.6,
+  },
+  submitBtnText: {
+    color: '#0A0A0A',
+    fontWeight: Theme.font.weight.bold,
+    fontSize: Theme.font.size.sm,
   },
 });
-

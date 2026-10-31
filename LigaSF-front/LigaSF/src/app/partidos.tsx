@@ -1,4 +1,7 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+// Pantalla de Programación y Consulta de Partidos
+// Diseño Premium Oscuro alineado a LigaSF (Theme)
+
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,14 +10,17 @@ import {
   Alert,
   TouchableOpacity,
   ScrollView,
+  SafeAreaView,
+  StatusBar,
   Platform,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { getPartidos, programarPartido, eliminarPartido } from '@/api/partidosApi';
 import { getTorneos } from '@/api/catalogosApi';
 import { Partido, Torneo } from '@/api/types';
-import { Card, Button, LoadingView, ErrorView, EmptyView, GradientBackground } from '@/components/common';
+import { LoadingView, ErrorView, EmptyView } from '@/components/common';
 import { ProgramarPartidoModal } from '@/components/partidos/ProgramarPartidoModal';
-import { useRouter } from 'expo-router';
+import { Theme, sectionLabelStyle } from '@/constants/theme';
 
 export default function PartidosScreen() {
   const router = useRouter();
@@ -54,15 +60,24 @@ export default function PartidosScreen() {
   const handleProgramar = async (data: any) => {
     try {
       await programarPartido(data);
-      Alert.alert('Éxito', 'Partido programado satisfactoriamente.');
+      if (Platform.OS === 'web') {
+        window.alert('Partido programado satisfactoriamente.');
+      } else {
+        Alert.alert('Éxito', 'Partido programado satisfactoriamente.');
+      }
       cargarDatos();
     } catch (e: any) {
-      Alert.alert('Error al programar', e.message || 'No se pudo programar el partido');
+      const msg = e.message || 'No se pudo programar el partido';
+      if (Platform.OS === 'web') {
+        window.alert('Error al programar: ' + msg);
+      } else {
+        Alert.alert('Error al programar', msg);
+      }
       throw e;
     }
   };
 
-    const ejecutarCancelacion = async (partido: Partido) => {
+  const ejecutarCancelacion = async (partido: Partido) => {
     try {
       await eliminarPartido(partido.id);
       if (Platform.OS === 'web') {
@@ -92,7 +107,7 @@ export default function PartidosScreen() {
       return;
     }
 
-    const mensaje = "¿Deseas desprogramar el encuentro " + (partido.nombreEquipoLocal || "Local") + " vs " + (partido.nombreEquipoVisitante || "Visitante") + "?";
+    const mensaje = `¿Deseas desprogramar el encuentro ${(partido.nombreEquipoLocal || 'Local')} vs ${(partido.nombreEquipoVisitante || 'Visitante')}?`;
 
     if (Platform.OS === 'web') {
       if (window.confirm(mensaje)) {
@@ -113,6 +128,7 @@ export default function PartidosScreen() {
       );
     }
   };
+
   const formatearFechaHora = (isoStr: string) => {
     try {
       const d = new Date(isoStr);
@@ -123,25 +139,43 @@ export default function PartidosScreen() {
   };
 
   return (
-    <GradientBackground><View style={styles.container}>
-      {/* Filtros */}
-      <View style={styles.filterCard}>
-        <Text style={styles.filterTitle}>Filtrar Encuentros</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor={Theme.bg.base} />
 
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={styles.backArrow}>‹</Text>
+          <Text style={styles.backText}>Volver</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Partidos y Fixture</Text>
+      </View>
+
+      {/* Panel de Filtros */}
+      <View style={styles.filterSection}>
+        <Text style={styles.filterTitle}>FILTRAR ENCUENTROS</Text>
+
+        {/* Torneos */}
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
           data={[{ id: undefined, nombre: 'Todos los Torneos' } as any, ...torneos]}
           keyExtractor={(item) => String(item.id ?? 'todos')}
-          contentContainerStyle={styles.horizPills}
+          contentContainerStyle={styles.torneoFilterList}
           renderItem={({ item }) => {
             const isSel = torneoId === item.id;
             return (
               <TouchableOpacity
-                style={[styles.pill, isSel && styles.pillActive]}
+                style={[styles.torneoPill, isSel && styles.torneoPillActive]}
                 onPress={() => setTorneoId(item.id)}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.pillText, isSel && styles.pillTextActive]}>
+                <Text style={[styles.torneoPillText, isSel && styles.torneoPillTextActive]}>
                   {item.nombre}
                 </Text>
               </TouchableOpacity>
@@ -149,10 +183,10 @@ export default function PartidosScreen() {
           }}
         />
 
-        {/* Filtro por Fecha */}
+        {/* Fechas */}
         <View style={styles.fechasRow}>
-          <Text style={styles.fechaLabel}>Fecha N°:</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <Text style={styles.fechasLabel}>FECHA:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fechasList}>
             {[undefined, 1, 2, 3, 4, 5, 6].map((f) => {
               const isSel = numeroFecha === f;
               return (
@@ -160,6 +194,7 @@ export default function PartidosScreen() {
                   key={String(f ?? 'todas')}
                   style={[styles.fechaPill, isSel && styles.fechaPillActive]}
                   onPress={() => setNumeroFecha(f)}
+                  activeOpacity={0.7}
                 >
                   <Text style={[styles.fechaPillText, isSel && styles.fechaPillTextActive]}>
                     {f === undefined ? 'Todas' : `F${f}`}
@@ -170,100 +205,135 @@ export default function PartidosScreen() {
           </ScrollView>
         </View>
 
-        <Button
-          title="+ Programar Partido"
-          onPress={() => setModalVisible(true)}
+        {/* Botón CTA Nuevo Partido */}
+        <TouchableOpacity
           style={styles.nuevoBtn}
-        />
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.nuevoBtnText}>+ PROGRAMAR PARTIDO</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Estados Visuales de Cátedra */}
-      {cargando ? (
-        <LoadingView mensaje="Cargando fixture y partidos..." />
-      ) : error ? (
-        <ErrorView mensaje={error} onRetry={cargarDatos} />
-      ) : partidos.length === 0 ? (
-        <EmptyView mensaje="No se encontraron partidos programados con los filtros seleccionados." />
-      ) : (
-        <FlatList
-          data={partidos}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <Card style={styles.matchCard}>
-              <View style={styles.matchHeader}>
-                <Text style={styles.fechaBadge}>FECHA {item.numeroFecha}</Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    item.estado === 'PROGRAMADO'
-                      ? styles.statusProg
-                      : item.estado === 'EN_JUEGO'
-                      ? styles.statusLive
-                      : styles.statusDone,
-                  ]}
-                >
-                  <Text style={styles.statusText}>{item.estado}</Text>
+      {/* Lista de Partidos */}
+      <View style={styles.listContainer}>
+        {cargando ? (
+          <LoadingView mensaje="Cargando fixture y partidos..." />
+        ) : error ? (
+          <ErrorView mensaje={error} onRetry={cargarDatos} />
+        ) : partidos.length === 0 ? (
+          <EmptyView mensaje="No se encontraron partidos programados con los filtros seleccionados." />
+        ) : (
+          <FlatList
+            data={partidos}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listPadding}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => {
+              const esProgramado = item.estado === 'PROGRAMADO';
+              const esEnJuego = item.estado === 'EN_JUEGO';
+              const esFinalizado = item.estado === 'FINALIZADO';
+
+              const franjaColor = esEnJuego
+                ? Theme.status.success.text
+                : esProgramado
+                ? Theme.accent.DEFAULT
+                : Theme.status.neutral.text;
+
+              const badgeBg = esEnJuego
+                ? Theme.status.success.bg
+                : esProgramado
+                ? Theme.accent.dim
+                : Theme.status.neutral.bg;
+
+              const badgeBorder = esEnJuego
+                ? Theme.status.success.border
+                : esProgramado
+                ? Theme.border.active
+                : Theme.status.neutral.border;
+
+              const badgeText = esEnJuego
+                ? Theme.status.success.text
+                : esProgramado
+                ? Theme.accent.DEFAULT
+                : Theme.status.neutral.text;
+
+              return (
+                <View style={styles.matchCard}>
+                  {/* Franja de estado */}
+                  <View style={[styles.franja, { backgroundColor: franjaColor }]} />
+
+                  <View style={styles.matchBody}>
+                    {/* Header de la card */}
+                    <View style={styles.matchHeader}>
+                      <Text style={styles.fechaBadgeText}>FECHA {item.numeroFecha}</Text>
+                      <View style={[styles.badge, { backgroundColor: badgeBg, borderColor: badgeBorder }]}>
+                        <Text style={[styles.badgeText, { color: badgeText }]}>{item.estado}</Text>
+                      </View>
+                    </View>
+
+                    {/* Enfrentamiento y Marcador */}
+                    <View style={styles.versusContainer}>
+                      <View style={styles.teamCol}>
+                        <Text style={styles.teamName} numberOfLines={2}>
+                          {item.nombreEquipoLocal || `Equipo #${item.equipoLocalId}`}
+                        </Text>
+                      </View>
+
+                      <View style={styles.scoreContainer}>
+                        <Text style={styles.scoreText}>
+                          {item.golesLocal ?? '-'} : {item.golesVisitante ?? '-'}
+                        </Text>
+                        <Text style={styles.vsLabel}>VS</Text>
+                      </View>
+
+                      <View style={[styles.teamCol, { alignItems: 'flex-end' }]}>
+                        <Text style={[styles.teamName, { textAlign: 'right' }]} numberOfLines={2}>
+                          {item.nombreEquipoVisitante || `Equipo #${item.equipoVisitanteId}`}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Detalles */}
+                    <View style={styles.detailsBox}>
+                      <Text style={styles.detailText}>
+                        🏟️ Cancha: <Text style={styles.highlight}>{item.nombreCancha || item.canchaId}</Text>
+                      </Text>
+                      <Text style={styles.detailText}>
+                        🧑‍⚖️ Árbitro: <Text style={styles.highlight}>{item.nombreArbitro || item.arbitroId}</Text>
+                      </Text>
+                      <Text style={styles.detailText}>
+                        🕒 Horario: <Text style={styles.highlight}>{formatearFechaHora(item.fechaHoraInicio)}</Text>
+                      </Text>
+                    </View>
+
+                    {/* Acciones */}
+                    <View style={styles.actionsRow}>
+                      <TouchableOpacity
+                        style={styles.liveBtn}
+                        onPress={() => router.push(`/partido-en-vivo?id=${item.id}` as any)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.liveBtnText}>🔴 Ver / Operar en Vivo</Text>
+                      </TouchableOpacity>
+
+                      {esProgramado && (
+                        <TouchableOpacity
+                          style={styles.cancelBtn}
+                          onPress={() => handleEliminar(item)}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.cancelBtnText}>Cancelar Encuentro</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
                 </View>
-              </View>
-
-              {/* Enfrentamiento */}
-              <View style={styles.versusContainer}>
-                <View style={styles.teamColumn}>
-                  <Text style={styles.teamName}>
-                    {item.nombreEquipoLocal || `Equipo #${item.equipoLocalId}`}
-                  </Text>
-                </View>
-
-                <View style={styles.scoreBox}>
-                  <Text style={styles.scoreText}>
-                    {item.golesLocal ?? '-'} : {item.golesVisitante ?? '-'}
-                  </Text>
-                  <Text style={styles.vsLabel}>VS</Text>
-                </View>
-
-                <View style={styles.teamColumn}>
-                  <Text style={styles.teamName}>
-                    {item.nombreEquipoVisitante || `Equipo #${item.equipoVisitanteId}`}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Detalles */}
-              <View style={styles.detailsBox}>
-                <Text style={styles.detailText}>
-                  🏟️ Cancha: <Text style={styles.bold}>{item.nombreCancha || item.canchaId}</Text>
-                </Text>
-                <Text style={styles.detailText}>
-                  🧑‍⚖️ Árbitro: <Text style={styles.bold}>{item.nombreArbitro || item.arbitroId}</Text>
-                </Text>
-                <Text style={styles.detailText}>
-                  🕒 Horario: <Text style={styles.bold}>{formatearFechaHora(item.fechaHoraInicio)}</Text>
-                </Text>
-              </View>
-
-                            <View style={styles.actionRow}>
-                <Button
-                  title="🔴 Ver / Operar en Vivo"
-                  onPress={() => router.push(`/partido-en-vivo?id=${item.id}` as any)}
-                  style={styles.liveBtn}
-                />
-              </View>
-
-              {item.estado === 'PROGRAMADO' && (
-                <View style={styles.actionRow}>
-                  <Button
-                    title="Cancelar Encuentro"
-                    variant="danger"
-                    style={styles.cancelBtn}
-                    onPress={() => handleEliminar(item)}
-                  />
-                </View>
-              )}
-            </Card>
-          )}
-        />
-      )}
+              );
+            }}
+          />
+        )}
+      </View>
 
       {/* Modal Programación */}
       <ProgramarPartidoModal
@@ -272,195 +342,252 @@ export default function PartidosScreen() {
         onSubmit={handleProgramar}
         torneoIdDefault={torneoId}
       />
-    </View></GradientBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Theme.bg.base,
   },
-  filterCard: {
-    backgroundColor: '#ffffff',
-    padding: 14,
+  header: {
+    paddingHorizontal: Theme.spacing.lg,
+    paddingTop: Theme.spacing.sm,
+    paddingBottom: Theme.spacing.md,
     borderBottomWidth: 1,
-    borderColor: '#e2e8f0',
+    borderBottomColor: Theme.border.subtle,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  backArrow: {
+    color: Theme.accent.DEFAULT,
+    fontSize: 22,
+    lineHeight: 22,
+    marginRight: 4,
+    fontWeight: '300',
+  },
+  backText: {
+    color: Theme.accent.DEFAULT,
+    fontSize: Theme.font.size.sm,
+    fontWeight: Theme.font.weight.semibold,
+  },
+  headerTitle: {
+    fontSize: Theme.font.size.xxl,
+    fontWeight: Theme.font.weight.bold,
+    color: Theme.text.primary,
+    letterSpacing: Theme.font.letterSpacing.tight,
+  },
+  filterSection: {
+    backgroundColor: Theme.bg.card,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.border.subtle,
+    gap: Theme.spacing.sm,
   },
   filterTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 8,
+    ...sectionLabelStyle,
+    color: Theme.text.secondary,
   },
-  horizPills: {
-    gap: 8,
-    paddingVertical: 4,
+  torneoFilterList: {
+    gap: Theme.spacing.xs,
+    paddingVertical: 2,
   },
-  pill: {
+  torneoPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.bg.input,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginRight: 6,
+    borderColor: Theme.border.subtle,
   },
-  pillActive: {
-    backgroundColor: '#8b5cf6',
-    borderColor: '#8b5cf6',
+  torneoPillActive: {
+    backgroundColor: Theme.accent.dim,
+    borderColor: Theme.border.active,
   },
-  pillText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '600',
+  torneoPillText: {
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.semibold,
   },
-  pillTextActive: {
-    color: '#ffffff',
+  torneoPillTextActive: {
+    color: Theme.accent.DEFAULT,
   },
   fechasRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 8,
+    gap: Theme.spacing.sm,
   },
-  fechaLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#64748b',
-    marginRight: 8,
+  fechasLabel: {
+    ...sectionLabelStyle,
+    color: Theme.text.secondary,
+  },
+  fechasList: {
+    gap: Theme.spacing.xs,
   },
   fechaPill: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: '#f1f5f9',
-    marginRight: 6,
+    borderRadius: Theme.radius.sm,
+    backgroundColor: Theme.bg.input,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: Theme.border.subtle,
   },
   fechaPillActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+    backgroundColor: Theme.accent.dim,
+    borderColor: Theme.border.active,
   },
   fechaPillText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '600',
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.semibold,
   },
   fechaPillTextActive: {
-    color: '#ffffff',
+    color: Theme.accent.DEFAULT,
   },
   nuevoBtn: {
-    backgroundColor: '#8b5cf6',
-    marginTop: 6,
+    backgroundColor: Theme.accent.DEFAULT,
+    paddingVertical: 10,
+    borderRadius: Theme.radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Theme.spacing.xs,
   },
-  list: {
-    padding: 16,
+  nuevoBtnText: {
+    color: '#0A0A0A',
+    fontWeight: Theme.font.weight.black,
+    fontSize: Theme.font.size.xs,
+    letterSpacing: Theme.font.letterSpacing.wide,
+  },
+  listContainer: {
+    flex: 1,
+    backgroundColor: Theme.bg.base,
+  },
+  listPadding: {
+    padding: Theme.spacing.md,
   },
   matchCard: {
-    padding: 14,
-    borderLeftWidth: 4,
-    borderLeftColor: '#8b5cf6',
+    flexDirection: 'row',
+    backgroundColor: Theme.bg.card,
+    borderRadius: Theme.radius.md,
+    borderWidth: 1,
+    borderColor: Theme.border.subtle,
+    marginBottom: Theme.spacing.sm,
+    overflow: 'hidden',
+  },
+  franja: {
+    width: 3,
+  },
+  matchBody: {
+    flex: 1,
+    padding: Theme.spacing.md,
+    gap: Theme.spacing.sm,
   },
   matchHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
   },
-  fechaBadge: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#8b5cf6',
-    backgroundColor: '#f3e8ff',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+  fechaBadgeText: {
+    ...sectionLabelStyle,
+    color: Theme.text.secondary,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+  badge: {
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: Theme.radius.sm,
+    borderWidth: 1,
   },
-  statusProg: {
-    backgroundColor: '#e0f2fe',
-  },
-  statusLive: {
-    backgroundColor: '#fef3c7',
-  },
-  statusDone: {
-    backgroundColor: '#dcfce7',
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#0f172a',
+  badgeText: {
+    fontSize: Theme.font.size.xs,
+    fontWeight: Theme.font.weight.bold,
+    letterSpacing: Theme.font.letterSpacing.wide,
   },
   versusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderColor: '#f1f5f9',
-    marginBottom: 10,
+    backgroundColor: Theme.bg.input,
+    borderRadius: Theme.radius.sm,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: Theme.border.subtle,
   },
-  teamColumn: {
+  teamCol: {
     flex: 1,
-    alignItems: 'center',
   },
   teamName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#0f172a',
-    textAlign: 'center',
+    fontSize: Theme.font.size.md,
+    fontWeight: Theme.font.weight.bold,
+    color: Theme.text.primary,
   },
-  scoreBox: {
-    paddingHorizontal: 12,
+  scoreContainer: {
+    paddingHorizontal: Theme.spacing.md,
     alignItems: 'center',
   },
   scoreText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#0f172a',
+    fontSize: Theme.font.size.xl,
+    fontWeight: Theme.font.weight.black,
+    color: Theme.accent.DEFAULT,
+    fontVariant: ['tabular-nums'],
   },
   vsLabel: {
     fontSize: 10,
-    color: '#94a3b8',
-    fontWeight: 'bold',
+    color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.bold,
+    marginTop: 2,
   },
   detailsBox: {
-    backgroundColor: '#f8fafc',
-    padding: 8,
-    borderRadius: 8,
+    backgroundColor: Theme.bg.input,
+    padding: Theme.spacing.sm,
+    borderRadius: Theme.radius.sm,
+    borderWidth: 1,
+    borderColor: Theme.border.subtle,
     gap: 3,
   },
   detailText: {
-    fontSize: 12,
-    color: '#475569',
+    fontSize: Theme.font.size.xs,
+    color: Theme.text.secondary,
   },
-  bold: {
-    fontWeight: 'bold',
-    color: '#1e293b',
+  highlight: {
+    color: Theme.text.primary,
+    fontWeight: Theme.font.weight.semibold,
   },
-  actionRow: {
-    marginTop: 10,
+  actionsRow: {
     flexDirection: 'row',
+    gap: Theme.spacing.sm,
     justifyContent: 'flex-end',
+    marginTop: Theme.spacing.xs,
   },
-    liveBtn: {
-    backgroundColor: '#0284c7',
-    marginBottom: 8,
+  liveBtn: {
+    backgroundColor: Theme.bg.input,
+    borderWidth: 1,
+    borderColor: Theme.border.active,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: Theme.radius.sm,
+  },
+  liveBtnText: {
+    color: Theme.accent.DEFAULT,
+    fontSize: Theme.font.size.xs,
+    fontWeight: Theme.font.weight.bold,
   },
   cancelBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    backgroundColor: Theme.status.danger.bg,
+    borderWidth: 1,
+    borderColor: Theme.status.danger.border,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: Theme.radius.sm,
+  },
+  cancelBtnText: {
+    color: Theme.status.danger.text,
+    fontSize: Theme.font.size.xs,
+    fontWeight: Theme.font.weight.bold,
   },
 });
-
-
-
-
-
