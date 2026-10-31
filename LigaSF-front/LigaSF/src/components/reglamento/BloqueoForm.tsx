@@ -1,6 +1,5 @@
-// Formulario para verificar si un jugador está bloqueado para jugar en una fecha.
-// Flujo en cascada: seleccioná torneo → equipo → jugador → fecha → verificar.
-// Evita que un jugador suspendido sea alineado aunque el equipo lo intente.
+// Formulario de verificación de bloqueo — diseño premium oscuro
+// Flujo en cascada: torneo → equipo → jugador → fecha → verificar
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -9,45 +8,38 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 
+import { Theme, sectionLabelStyle, cardStyle } from '@/constants/theme';
 import { getTorneos } from '@/api/catalogosApi';
 import { getEquipos } from '@/api/equiposApi';
 import { getJugadores } from '@/api/jugadoresApi';
 import { consultarBloqueoJugador } from '@/api/reglamentoApi';
 import type { Torneo, Equipo, Jugador, BloqueoResponse } from '@/api/types';
 import { BloqueoCard } from './BloqueoCard';
-import { Button, LoadingView } from '@/components/common';
 
-const MAX_FECHAS = 20;
+// ─── Chip selector horizontal genérico ───────────────────────────────────────
 
-// ─── Selector de pills horizontal genérico ────────────────────────────────────
-
-interface PillSelectorProps<T> {
+interface ChipListProps<T> {
   label: string;
   items: T[];
   seleccionado: number | null;
-  getId: (item: T) => number;
+  getId:     (item: T) => number;
   getNombre: (item: T) => string;
-  onSeleccionar: (id: number) => void;
+  onSelect:  (id: number) => void;
   disabled?: boolean;
 }
 
-function PillSelector<T>({
-  label,
-  items,
-  seleccionado,
-  getId,
-  getNombre,
-  onSeleccionar,
-  disabled = false,
-}: PillSelectorProps<T>) {
+function ChipList<T>({
+  label, items, seleccionado, getId, getNombre, onSelect, disabled = false,
+}: ChipListProps<T>) {
   return (
-    <View style={[styles.selectorContainer, disabled && styles.deshabilitado]}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={[styles.fieldGroup, disabled && styles.fieldDisabled]}>
+      <Text style={styles.fieldLabel}>{label}</Text>
       {items.length === 0 ? (
-        <Text style={styles.sinDatos}>
-          {disabled ? 'Seleccioná el paso anterior primero' : 'Sin datos disponibles'}
+        <Text style={styles.emptyHint}>
+          {disabled ? 'Completá el paso anterior' : '—'}
         </Text>
       ) : (
         <FlatList
@@ -56,21 +48,21 @@ function PillSelector<T>({
           horizontal
           showsHorizontalScrollIndicator={false}
           renderItem={({ item }) => {
-            const id = getId(item);
+            const id    = getId(item);
             const activo = seleccionado === id;
             return (
               <TouchableOpacity
-                style={[styles.pill, activo && styles.pillActivo]}
-                onPress={() => !disabled && onSeleccionar(id)}
+                style={[styles.chip, activo && styles.chipActivo]}
+                onPress={() => !disabled && onSelect(id)}
                 activeOpacity={disabled ? 1 : 0.7}
               >
-                <Text style={[styles.pillText, activo && styles.pillTextActivo]}>
+                <Text style={[styles.chipText, activo && styles.chipTextActivo]}>
                   {getNombre(item)}
                 </Text>
               </TouchableOpacity>
             );
           }}
-          contentContainerStyle={{ paddingVertical: 4 }}
+          contentContainerStyle={styles.chipsRow}
         />
       )}
     </View>
@@ -80,69 +72,52 @@ function PillSelector<T>({
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export const BloqueoForm: React.FC = () => {
-  // Catálogos
-  const [torneos, setTorneos] = useState<Torneo[]>([]);
-  const [equipos, setEquipos] = useState<Equipo[]>([]);
-  const [jugadores, setJugadores] = useState<Jugador[]>([]);
+  const [torneos,  setTorneos]  = useState<Torneo[]>([]);
+  const [equipos,  setEquipos]  = useState<Equipo[]>([]);
+  const [jugadores,setJugadores]= useState<Jugador[]>([]);
 
-  // Selección en cascada
-  const [torneoId, setTorneoId] = useState<number | null>(null);
-  const [equipoId, setEquipoId] = useState<number | null>(null);
+  const [torneoId,  setTorneoId]  = useState<number | null>(null);
+  const [equipoId,  setEquipoId]  = useState<number | null>(null);
   const [jugadorId, setJugadorId] = useState<number | null>(null);
-  const [fecha, setFecha] = useState<number | null>(null);
+  const [fecha,     setFecha]     = useState<string>('');
 
-  // Resultado
   const [resultado, setResultado] = useState<BloqueoResponse | null>(null);
-  const [cargando, setCargando] = useState(false);
-  const [cargandoEquipos, setCargandoEquipos] = useState(false);
-  const [cargandoJugadores, setCargandoJugadores] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [cargando,  setCargando]  = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
 
-  // Carga inicial de torneos
   useEffect(() => {
-    getTorneos(false)
-      .then(setTorneos)
-      .catch(() => setError('No se pudieron cargar los torneos.'));
+    getTorneos(false).then(setTorneos).catch(() => setError('No se pudieron cargar los torneos.'));
   }, []);
 
-  // Carga equipos al cambiar torneo
   useEffect(() => {
     if (!torneoId) return;
-    setCargandoEquipos(true);
-    setEquipos([]);
-    setEquipoId(null);
-    setJugadores([]);
-    setJugadorId(null);
+    setEquipos([]); setEquipoId(null);
+    setJugadores([]); setJugadorId(null);
     setResultado(null);
     getEquipos(torneoId)
       .then(setEquipos)
-      .catch(() => setError('No se pudieron cargar los equipos.'))
-      .finally(() => setCargandoEquipos(false));
+      .catch(() => setError('No se pudieron cargar los equipos.'));
   }, [torneoId]);
 
-  // Carga jugadores al cambiar equipo
   useEffect(() => {
     if (!equipoId) return;
-    setCargandoJugadores(true);
-    setJugadores([]);
-    setJugadorId(null);
-    setResultado(null);
+    setJugadores([]); setJugadorId(null); setResultado(null);
     getJugadores(equipoId)
       .then(setJugadores)
-      .catch(() => setError('No se pudieron cargar los jugadores.'))
-      .finally(() => setCargandoJugadores(false));
+      .catch(() => setError('No se pudieron cargar los jugadores.'));
   }, [equipoId]);
 
   const handleVerificar = async () => {
-    if (!jugadorId || !torneoId || !fecha) {
-      setError('Completá torneo, equipo, jugador y fecha antes de verificar.');
+    const numFecha = parseInt(fecha, 10);
+    if (!jugadorId || !torneoId || !fecha || isNaN(numFecha) || numFecha < 1) {
+      setError('Completá todos los campos antes de verificar.');
       return;
     }
     setError(null);
     setCargando(true);
     setResultado(null);
     try {
-      const res = await consultarBloqueoJugador(jugadorId, torneoId, fecha);
+      const res = await consultarBloqueoJugador(jugadorId, torneoId, numFecha);
       setResultado(res);
     } catch (e: any) {
       setError(e?.message || 'Error al verificar el bloqueo.');
@@ -152,89 +127,81 @@ export const BloqueoForm: React.FC = () => {
   };
 
   const jugadorSeleccionado = jugadores.find((j) => j.id === jugadorId);
+  const puedeVerificar = !!jugadorId && !!fecha && !cargando;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.seccionTitulo}>Verificar bloqueo de jugador</Text>
-      <Text style={styles.descripcion}>
-        Comprobá si un jugador puede ser alineado en una fecha. Un jugador
-        suspendido está bloqueado aunque el equipo lo intente inscribir.
+
+      <Text style={styles.description}>
+        Verificá si un jugador puede ser alineado. Un jugador suspendido está
+        bloqueado aunque el equipo intente inscribirlo.
       </Text>
 
-      {/* Paso 1: Torneo */}
-      <PillSelector
-        label="1. Torneo"
+      {/* Paso 1 */}
+      <ChipList
+        label="1 · TORNEO"
         items={torneos}
         seleccionado={torneoId}
         getId={(t) => t.id}
         getNombre={(t) => `${t.nombre} ${t.anio}`}
-        onSeleccionar={(id) => { setTorneoId(id); setError(null); }}
+        onSelect={(id) => { setTorneoId(id); setError(null); }}
       />
 
-      {/* Paso 2: Equipo */}
-      {cargandoEquipos ? (
-        <LoadingView message="Cargando equipos..." />
-      ) : (
-        <PillSelector
-          label="2. Equipo"
-          items={equipos}
-          seleccionado={equipoId}
-          getId={(e) => e.id}
-          getNombre={(e) => e.nombre}
-          onSeleccionar={(id) => { setEquipoId(id); setError(null); }}
-          disabled={!torneoId}
-        />
-      )}
+      {/* Paso 2 */}
+      <ChipList
+        label="2 · EQUIPO"
+        items={equipos}
+        seleccionado={equipoId}
+        getId={(e) => e.id}
+        getNombre={(e) => e.nombre}
+        onSelect={(id) => { setEquipoId(id); setError(null); }}
+        disabled={!torneoId}
+      />
 
-      {/* Paso 3: Jugador */}
-      {cargandoJugadores ? (
-        <LoadingView message="Cargando jugadores..." />
-      ) : (
-        <PillSelector
-          label="3. Jugador"
-          items={jugadores}
-          seleccionado={jugadorId}
-          getId={(j) => j.id}
-          getNombre={(j) => `${j.nombre} ${j.apellido}`}
-          onSeleccionar={(id) => { setJugadorId(id); setResultado(null); setError(null); }}
-          disabled={!equipoId}
-        />
-      )}
+      {/* Paso 3 */}
+      <ChipList
+        label="3 · JUGADOR"
+        items={jugadores}
+        seleccionado={jugadorId}
+        getId={(j) => j.id}
+        getNombre={(j) => `${j.nombre} ${j.apellido}`}
+        onSelect={(id) => { setJugadorId(id); setResultado(null); setError(null); }}
+        disabled={!equipoId}
+      />
 
-      {/* Paso 4: Fecha */}
-      <View style={[styles.selectorContainer, !jugadorId && styles.deshabilitado]}>
-        <Text style={styles.label}>4. Número de fecha</Text>
-        <FlatList
-          data={Array.from({ length: MAX_FECHAS }, (_, i) => i + 1)}
-          keyExtractor={(item) => String(item)}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.pill, fecha === item && styles.pillActivo]}
-              onPress={() => { if (jugadorId) { setFecha(item); setResultado(null); } }}
-              activeOpacity={jugadorId ? 0.7 : 1}
-            >
-              <Text style={[styles.pillText, fecha === item && styles.pillTextActivo]}>
-                {item}
-              </Text>
-            </TouchableOpacity>
-          )}
-          contentContainerStyle={{ paddingVertical: 4 }}
+      {/* Paso 4: fecha */}
+      <View style={[styles.fieldGroup, !jugadorId && styles.fieldDisabled]}>
+        <Text style={styles.fieldLabel}>4 · NÚMERO DE FECHA</Text>
+        <TextInput
+          style={styles.input}
+          value={fecha}
+          onChangeText={(v) => {
+            setFecha(v.replace(/[^0-9]/g, ''));
+            setResultado(null);
+          }}
+          placeholder="Ej: 7"
+          placeholderTextColor={Theme.text.secondary}
+          keyboardType="number-pad"
+          maxLength={3}
+          returnKeyType="done"
+          editable={!!jugadorId}
         />
       </View>
 
       {/* Error */}
-      {error ? <Text style={styles.errorTexto}>{error}</Text> : null}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Botón verificar */}
-      <Button
-        title={cargando ? 'Verificando...' : 'Verificar bloqueo'}
+      {/* Botón */}
+      <TouchableOpacity
+        style={[styles.btn, !puedeVerificar && styles.btnDisabled]}
         onPress={handleVerificar}
-        variant="primary"
-        disabled={cargando || !jugadorId || !fecha}
-        style={styles.boton}
-      />
+        disabled={!puedeVerificar}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.btnText}>
+          {cargando ? 'VERIFICANDO...' : 'VERIFICAR BLOQUEO'}
+        </Text>
+      </TouchableOpacity>
 
       {/* Resultado */}
       <BloqueoCard
@@ -246,77 +213,91 @@ export const BloqueoForm: React.FC = () => {
         resultado={resultado}
         cargando={cargando}
       />
+
     </View>
   );
 };
 
 // ─── Estilos ──────────────────────────────────────────────────────────────────
 
-const AMBER = '#f59e0b';
-
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
+    gap: Theme.spacing.lg,
   },
-  seccionTitulo: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
+  description: {
+    fontSize:   Theme.font.size.sm,
+    color:      Theme.text.secondary,
+    lineHeight: 20,
   },
-  descripcion: {
-    fontSize: 13,
-    color: '#64748b',
-    marginBottom: 16,
-    lineHeight: 18,
+
+  fieldGroup: {
+    gap: Theme.spacing.sm,
   },
-  selectorContainer: {
-    marginBottom: 16,
+  fieldDisabled: {
+    opacity: 0.35,
   },
-  deshabilitado: {
-    opacity: 0.4,
+  fieldLabel: {
+    ...sectionLabelStyle,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  sinDatos: {
-    fontSize: 12,
-    color: '#94a3b8',
+  emptyHint: {
+    fontSize:  Theme.font.size.sm,
+    color:     Theme.text.secondary,
     fontStyle: 'italic',
   },
-  pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginRight: 8,
+
+  chipsRow: {
+    flexDirection: 'row',
+    gap:           Theme.spacing.sm,
+    paddingBottom: 2,
   },
-  pillActivo: {
-    backgroundColor: AMBER,
-    borderColor: AMBER,
+  chip: {
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical:   Theme.spacing.xs + 2,
+    borderRadius:      Theme.radius.pill,
+    backgroundColor:   Theme.bg.card,
+    borderWidth:       1,
+    borderColor:       Theme.border.subtle,
   },
-  pillText: {
-    fontSize: 13,
-    color: '#475569',
-    fontWeight: '500',
+  chipActivo: {
+    backgroundColor: Theme.accent.dim,
+    borderColor:     Theme.accent.DEFAULT,
   },
-  pillTextActivo: {
-    color: '#ffffff',
-    fontWeight: '700',
+  chipText: {
+    fontSize:   Theme.font.size.sm,
+    fontWeight: Theme.font.weight.medium,
+    color:      Theme.text.secondary,
   },
-  errorTexto: {
-    color: '#dc2626',
-    fontSize: 13,
-    marginBottom: 10,
+  chipTextActivo: {
+    color:      Theme.text.accent,
+    fontWeight: Theme.font.weight.bold,
   },
-  boton: {
-    marginBottom: 16,
-    backgroundColor: AMBER,
-    borderColor: AMBER,
+
+  input: {
+    ...cardStyle,
+    fontSize:   Theme.font.size.md,
+    fontWeight: Theme.font.weight.bold,
+    color:      Theme.text.primary,
+    height:     48,
+  },
+
+  errorText: {
+    fontSize: Theme.font.size.sm,
+    color:    Theme.text.error,
+  },
+
+  btn: {
+    backgroundColor: Theme.accent.DEFAULT,
+    borderRadius:    Theme.radius.md,
+    paddingVertical: Theme.spacing.md,
+    alignItems:      'center',
+  },
+  btnDisabled: {
+    opacity: 0.4,
+  },
+  btnText: {
+    fontSize:      Theme.font.size.sm,
+    fontWeight:    Theme.font.weight.black,
+    color:         '#0A0A0A',
+    letterSpacing: Theme.font.letterSpacing.wide,
   },
 });

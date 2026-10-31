@@ -1,8 +1,9 @@
-// Muestra un jugador sancionado con su equipo y motivo de suspensión.
-// Usado en la lista de sancionados de la tab "Sanciones" del módulo de reglamento.
+// Card de jugador sancionado — diseño premium oscuro
+// Franja lateral semántica: rojo = tarjeta roja / ámbar = dos amarillas
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Theme, sectionLabelStyle } from '@/constants/theme';
 import type { SancionResponse } from '@/api/types';
 
 interface SancionadoCardProps {
@@ -12,22 +13,36 @@ interface SancionadoCardProps {
 export const SancionadoCard: React.FC<SancionadoCardProps> = ({ sancion }) => {
   const esRoja = sancion.motivo === 'ROJA';
 
+  const franjaColor = esRoja
+    ? Theme.status.danger.text    // #EF4444
+    : Theme.status.warning.text;  // #FBBF24
+
+  const badgeBg = esRoja
+    ? Theme.status.danger.bg      // #2D0A0A
+    : Theme.status.warning.bg;    // #2D1A00
+
+  const badgeBorder = esRoja
+    ? Theme.status.danger.border  // #7F1D1D
+    : Theme.status.warning.border;// #78350F
+
+  const badgeText = esRoja
+    ? Theme.status.danger.text
+    : Theme.status.warning.text;
+
   return (
     <View style={styles.card}>
-      {/* Franja lateral de color según motivo */}
-      <View style={[styles.franja, esRoja ? styles.franjaRoja : styles.franjaAmarilla]} />
+      {/* Franja lateral de color */}
+      <View style={[styles.franja, { backgroundColor: franjaColor }]} />
 
-      <View style={styles.contenido}>
-        {/* Nombre del jugador */}
+      {/* Contenido */}
+      <View style={styles.body}>
         <Text style={styles.nombre}>{sancion.nombreJugador}</Text>
+        <Text style={styles.equipo}>{sancion.nombreEquipo.toUpperCase()}</Text>
 
-        {/* Equipo */}
-        <Text style={styles.equipo}>🏟 {sancion.nombreEquipo}</Text>
-
-        {/* Motivo */}
-        <View style={[styles.badge, esRoja ? styles.badgeRojo : styles.badgeAmarillo]}>
-          <Text style={[styles.badgeTexto, esRoja ? styles.badgeTextoRojo : styles.badgeTextoAmarillo]}>
-            {esRoja ? '🟥 Tarjeta roja' : '🟨🟨 Dos amarillas'}
+        {/* Badge de motivo */}
+        <View style={[styles.badge, { backgroundColor: badgeBg, borderColor: badgeBorder }]}>
+          <Text style={[styles.badgeText, { color: badgeText }]}>
+            {esRoja ? 'TARJETA ROJA' : 'DOS AMARILLAS'}
           </Text>
         </View>
       </View>
@@ -37,67 +52,42 @@ export const SancionadoCard: React.FC<SancionadoCardProps> = ({ sancion }) => {
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    marginBottom: 10,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
+    flexDirection:   'row',
+    backgroundColor: Theme.bg.card,
+    borderRadius:    Theme.radius.md,
+    borderWidth:     1,
+    borderColor:     Theme.border.subtle,
+    marginBottom:    Theme.spacing.sm,
+    overflow:        'hidden',
   },
   franja: {
-    width: 5,
+    width: 3,
   },
-  franjaRoja: {
-    backgroundColor: '#ef4444',
-  },
-  franjaAmarilla: {
-    backgroundColor: '#f59e0b',
-  },
-  contenido: {
-    flex: 1,
-    padding: 12,
-    gap: 4,
+  body: {
+    flex:    1,
+    padding: Theme.spacing.md,
+    gap:     Theme.spacing.xs,
   },
   nombre: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1e293b',
+    fontSize:   Theme.font.size.md,
+    fontWeight: Theme.font.weight.bold,
+    color:      Theme.text.primary,
   },
   equipo: {
-    fontSize: 13,
-    color: '#64748b',
+    ...sectionLabelStyle,
+    color: Theme.text.secondary,
   },
   badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 20,
-    marginTop: 4,
+    alignSelf:         'flex-start',
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical:   2,
+    borderRadius:      Theme.radius.sm,
+    borderWidth:       1,
+    marginTop:         Theme.spacing.xs,
   },
-  badgeRojo: {
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-  },
-  badgeAmarillo: {
-    backgroundColor: '#fffbeb',
-    borderWidth: 1,
-    borderColor: '#fcd34d',
-  },
-  badgeTexto: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  badgeTextoRojo: {
-    color: '#dc2626',
-  },
-  badgeTextoAmarillo: {
-    color: '#b45309',
+  badgeText: {
+    fontSize:      Theme.font.size.xs,
+    fontWeight:    Theme.font.weight.black,
+    letterSpacing: Theme.font.letterSpacing.wide,
   },
 });
