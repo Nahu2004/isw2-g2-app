@@ -1,6 +1,5 @@
-// Formulario para listar jugadores sancionados en una fecha de un torneo.
-// Implementa RN-03: suspensión automática por tarjetas acumuladas.
-// Muestra quién NO puede jugar en la próxima fecha indicada.
+// Formulario de sanciones por tarjetas — diseño premium oscuro
+// RN-03: lista de jugadores suspendidos para una fecha de torneo
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -9,73 +8,37 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 
+import { Theme, sectionLabelStyle, cardStyle } from '@/constants/theme';
 import { getTorneos } from '@/api/catalogosApi';
 import { listarSancionados } from '@/api/reglamentoApi';
 import type { Torneo, SancionResponse } from '@/api/types';
 import { SancionadoCard } from './SancionadoCard';
-import { Button, LoadingView, ErrorView, EmptyView } from '@/components/common';
-
-// ─── Selector de número de fecha ─────────────────────────────────────────────
-
-const MAX_FECHAS = 20;
-
-interface SelectorFechaProps {
-  seleccionada: number | null;
-  onSeleccionar: (f: number) => void;
-}
-
-const SelectorFecha: React.FC<SelectorFechaProps> = ({ seleccionada, onSeleccionar }) => (
-  <View style={styles.selectorContainer}>
-    <Text style={styles.label}>Número de fecha</Text>
-    <FlatList
-      data={Array.from({ length: MAX_FECHAS }, (_, i) => i + 1)}
-      keyExtractor={(item) => String(item)}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={[styles.pill, seleccionada === item && styles.pillActivo]}
-          onPress={() => onSeleccionar(item)}
-        >
-          <Text style={[styles.pillText, seleccionada === item && styles.pillTextActivo]}>
-            {item}
-          </Text>
-        </TouchableOpacity>
-      )}
-      contentContainerStyle={{ paddingVertical: 4 }}
-    />
-  </View>
-);
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export const SancionesForm: React.FC = () => {
-  // Catálogos
-  const [torneos, setTorneos] = useState<Torneo[]>([]);
-  const [cargandoCatalogos, setCargandoCatalogos] = useState(true);
-
-  // Selección
+  const [torneos,  setTorneos]  = useState<Torneo[]>([]);
   const [torneoId, setTorneoId] = useState<number | null>(null);
-  const [fecha, setFecha] = useState<number | null>(null);
+  const [fecha,    setFecha]    = useState<string>('');
 
-  // Resultados
   const [sancionados, setSancionados] = useState<SancionResponse[]>([]);
-  const [consultado, setConsultado] = useState(false);
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [consultado,  setConsultado]  = useState(false);
+  const [cargando,    setCargando]    = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
 
   useEffect(() => {
     getTorneos(false)
       .then(setTorneos)
-      .catch(() => setError('No se pudieron cargar los torneos.'))
-      .finally(() => setCargandoCatalogos(false));
+      .catch(() => setError('No se pudieron cargar los torneos.'));
   }, []);
 
   const handleConsultar = async () => {
-    if (!torneoId || !fecha) {
-      setError('Seleccioná un torneo y una fecha.');
+    const numFecha = parseInt(fecha, 10);
+    if (!torneoId || !fecha || isNaN(numFecha) || numFecha < 1) {
+      setError('Seleccioná un torneo e ingresá un número de fecha válido.');
       return;
     }
     setError(null);
@@ -84,7 +47,7 @@ export const SancionesForm: React.FC = () => {
     setConsultado(false);
 
     try {
-      const resultado = await listarSancionados(torneoId, fecha);
+      const resultado = await listarSancionados(torneoId, numFecha);
       setSancionados(resultado);
       setConsultado(true);
     } catch (e: any) {
@@ -94,167 +57,237 @@ export const SancionesForm: React.FC = () => {
     }
   };
 
-  if (cargandoCatalogos) return <LoadingView message="Cargando torneos..." />;
-
   const torneoSeleccionado = torneos.find((t) => t.id === torneoId);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.seccionTitulo}>Jugadores sancionados</Text>
-      <Text style={styles.descripcion}>
-        Consultá quiénes no pueden jugar en una fecha por acumulación de tarjetas.
+
+      <Text style={styles.description}>
+        Consultá los jugadores que no pueden jugar en una fecha por acumulación de tarjetas.
       </Text>
 
       {/* Selector de torneo */}
-      <View style={styles.selectorContainer}>
-        <Text style={styles.label}>Torneo</Text>
+      <View style={styles.fieldGroup}>
+        <Text style={styles.fieldLabel}>TORNEO</Text>
         <FlatList
           data={torneos}
           keyExtractor={(t) => String(t.id)}
           horizontal
           showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.pill, torneoId === item.id && styles.pillActivo]}
-              onPress={() => {
-                setTorneoId(item.id);
-                setSancionados([]);
-                setConsultado(false);
-              }}
-            >
-              <Text style={[styles.pillText, torneoId === item.id && styles.pillTextActivo]}>
-                {item.nombre} {item.anio}
-              </Text>
-            </TouchableOpacity>
-          )}
-          contentContainerStyle={{ paddingVertical: 4 }}
+          renderItem={({ item }) => {
+            const activo = torneoId === item.id;
+            return (
+              <TouchableOpacity
+                style={[styles.chip, activo && styles.chipActivo]}
+                onPress={() => {
+                  setTorneoId(item.id);
+                  setSancionados([]);
+                  setConsultado(false);
+                  setError(null);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.chipText, activo && styles.chipTextActivo]}>
+                  {item.nombre} {item.anio}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
+          contentContainerStyle={styles.chipsRow}
         />
       </View>
 
-      {/* Selector de fecha */}
-      <SelectorFecha seleccionada={fecha} onSeleccionar={setFecha} />
+      {/* Input de fecha */}
+      <View style={styles.fieldGroup}>
+        <Text style={styles.fieldLabel}>NÚMERO DE FECHA</Text>
+        <TextInput
+          style={styles.input}
+          value={fecha}
+          onChangeText={(v) => {
+            setFecha(v.replace(/[^0-9]/g, ''));
+            setConsultado(false);
+            setSancionados([]);
+          }}
+          placeholder="Ej: 5"
+          placeholderTextColor={Theme.text.secondary}
+          keyboardType="number-pad"
+          maxLength={3}
+          returnKeyType="done"
+        />
+      </View>
 
       {/* Error */}
-      {error ? <Text style={styles.errorTexto}>{error}</Text> : null}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Botón consultar */}
-      <Button
-        title={cargando ? 'Consultando...' : 'Ver sancionados'}
+      {/* Botón */}
+      <TouchableOpacity
+        style={[styles.btn, cargando && styles.btnDisabled]}
         onPress={handleConsultar}
-        variant="primary"
         disabled={cargando}
-        style={styles.boton}
-      />
+        activeOpacity={0.8}
+      >
+        <Text style={styles.btnText}>
+          {cargando ? 'CONSULTANDO...' : 'VER SANCIONADOS'}
+        </Text>
+      </TouchableOpacity>
 
       {/* Resultados */}
-      {cargando && <LoadingView message="Buscando sancionados..." />}
-
       {consultado && !cargando && (
-        <>
-          <View style={styles.resultadosHeader}>
-            <Text style={styles.resultadosTitulo}>
-              {torneoSeleccionado?.nombre} — Fecha {fecha}
+        <View style={styles.results}>
+
+          {/* Header de resultados */}
+          <View style={styles.resultsHeader}>
+            <Text style={styles.fieldLabel}>
+              {torneoSeleccionado
+                ? `${torneoSeleccionado.nombre.toUpperCase()} — FECHA ${fecha}`
+                : 'RESULTADOS'}
             </Text>
-            <View style={styles.badgeTotal}>
-              <Text style={styles.badgeTotalTexto}>{sancionados.length}</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countText}>{sancionados.length}</Text>
             </View>
           </View>
 
           {sancionados.length === 0 ? (
-            <EmptyView message="No hay jugadores sancionados para esta fecha. ✅" />
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyText}>
+                Sin suspendidos para esta fecha
+              </Text>
+              <Text style={styles.emptySubtext}>
+                Todos los jugadores están habilitados ✓
+              </Text>
+            </View>
           ) : (
             sancionados.map((s) => (
               <SancionadoCard key={s.jugadorId} sancion={s} />
             ))
           )}
-        </>
+
+        </View>
       )}
+
     </View>
   );
 };
 
 // ─── Estilos ──────────────────────────────────────────────────────────────────
 
-const AMBER = '#f59e0b';
-
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
+    gap: Theme.spacing.lg,
   },
-  seccionTitulo: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
+  description: {
+    fontSize:   Theme.font.size.sm,
+    color:      Theme.text.secondary,
+    lineHeight: 20,
   },
-  descripcion: {
-    fontSize: 13,
-    color: '#64748b',
-    marginBottom: 16,
-    lineHeight: 18,
+
+  // Grupos de campo
+  fieldGroup: {
+    gap: Theme.spacing.sm,
   },
-  selectorContainer: {
-    marginBottom: 16,
+  fieldLabel: {
+    ...sectionLabelStyle,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginRight: 8,
-  },
-  pillActivo: {
-    backgroundColor: AMBER,
-    borderColor: AMBER,
-  },
-  pillText: {
-    fontSize: 13,
-    color: '#475569',
-    fontWeight: '500',
-  },
-  pillTextActivo: {
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-  errorTexto: {
-    color: '#dc2626',
-    fontSize: 13,
-    marginBottom: 10,
-  },
-  boton: {
-    marginBottom: 16,
-    backgroundColor: AMBER,
-    borderColor: AMBER,
-  },
-  resultadosHeader: {
+
+  // Chips
+  chipsRow: {
     flexDirection: 'row',
+    gap:           Theme.spacing.sm,
+    paddingBottom: 2,
+  },
+  chip: {
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical:   Theme.spacing.xs + 2,
+    borderRadius:      Theme.radius.pill,
+    backgroundColor:   Theme.bg.card,
+    borderWidth:       1,
+    borderColor:       Theme.border.subtle,
+  },
+  chipActivo: {
+    backgroundColor: Theme.accent.dim,
+    borderColor:     Theme.accent.DEFAULT,
+  },
+  chipText: {
+    fontSize:   Theme.font.size.sm,
+    fontWeight: Theme.font.weight.medium,
+    color:      Theme.text.secondary,
+  },
+  chipTextActivo: {
+    color:      Theme.text.accent,
+    fontWeight: Theme.font.weight.bold,
+  },
+
+  // Input
+  input: {
+    ...cardStyle,
+    fontSize:    Theme.font.size.md,
+    fontWeight:  Theme.font.weight.bold,
+    color:       Theme.text.primary,
+    height:      48,
+  },
+
+  // Error
+  errorText: {
+    fontSize: Theme.font.size.sm,
+    color:    Theme.text.error,
+  },
+
+  // Botón
+  btn: {
+    backgroundColor: Theme.accent.DEFAULT,
+    borderRadius:    Theme.radius.md,
+    paddingVertical: Theme.spacing.md,
+    alignItems:      'center',
+  },
+  btnDisabled: {
+    opacity: 0.4,
+  },
+  btnText: {
+    fontSize:      Theme.font.size.sm,
+    fontWeight:    Theme.font.weight.black,
+    color:         '#0A0A0A',
+    letterSpacing: Theme.font.letterSpacing.wide,
+  },
+
+  // Resultados
+  results: {
+    gap: Theme.spacing.sm,
+  },
+  resultsHeader: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  countBadge: {
+    backgroundColor: Theme.accent.dim,
+    borderWidth:     1,
+    borderColor:     Theme.accent.DEFAULT,
+    borderRadius:    Theme.radius.pill,
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical:   2,
+    minWidth:          28,
+    alignItems:        'center',
+  },
+  countText: {
+    fontSize:   Theme.font.size.xs,
+    fontWeight: Theme.font.weight.black,
+    color:      Theme.text.accent,
+  },
+
+  // Empty state
+  emptyCard: {
+    ...cardStyle,
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
+    paddingVertical: Theme.spacing.xl,
+    gap: Theme.spacing.xs,
   },
-  resultadosTitulo: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    flex: 1,
+  emptyText: {
+    fontSize:   Theme.font.size.md,
+    fontWeight: Theme.font.weight.bold,
+    color:      Theme.text.primary,
   },
-  badgeTotal: {
-    backgroundColor: AMBER,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-  },
-  badgeTotalTexto: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 13,
+  emptySubtext: {
+    fontSize: Theme.font.size.sm,
+    color:    Theme.status.success.text,
   },
 });
