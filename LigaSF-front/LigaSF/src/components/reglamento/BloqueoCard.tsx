@@ -1,8 +1,9 @@
-// Muestra si un jugador está bloqueado para jugar en una fecha.
-// Verde = puede jugar. Rojo = bloqueado, con el motivo de la suspensión.
+// Card de resultado de bloqueo de jugador — diseño premium oscuro
+// Verde = habilitado / Rojo = bloqueado con motivo
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Theme, sectionLabelStyle } from '@/constants/theme';
 import type { BloqueoResponse } from '@/api/types';
 
 interface BloqueoCardProps {
@@ -18,28 +19,31 @@ export const BloqueoCard: React.FC<BloqueoCardProps> = ({
 }) => {
   if (cargando) {
     return (
-      <View style={[styles.card, styles.cardNeutro]}>
-        <Text style={styles.jugadorNombre}>{nombreJugador}</Text>
-        <Text style={styles.estadoTexto}>Verificando...</Text>
+      <View style={[styles.card, styles.cardNeutral]}>
+        <Text style={styles.cardLabel}>{nombreJugador.toUpperCase()}</Text>
+        <Text style={styles.neutralText}>Verificando...</Text>
       </View>
     );
   }
 
   if (!resultado) return null;
 
-  const bloqueado = resultado.bloqueado;
+  const bloqueado   = resultado.bloqueado;
+  const statusTheme = bloqueado ? Theme.status.danger : Theme.status.success;
 
   return (
-    <View style={[styles.card, bloqueado ? styles.cardBloqueado : styles.cardLibre]}>
-      <View style={styles.fila}>
-        <Text style={styles.icono}>{bloqueado ? '🚫' : '✅'}</Text>
-        <Text style={styles.jugadorNombre}>{nombreJugador}</Text>
+    <View style={[
+      styles.card,
+      { backgroundColor: statusTheme.bg, borderColor: statusTheme.border },
+    ]}>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>{nombreJugador.toUpperCase()}</Text>
       </View>
-      <Text style={[styles.estadoTexto, bloqueado ? styles.textoRojo : styles.textoVerde]}>
-        {bloqueado ? 'Bloqueado — no puede jugar' : 'Habilitado para jugar'}
+      <Text style={[styles.statusValue, { color: statusTheme.text }]}>
+        {bloqueado ? 'BLOQUEADO' : 'HABILITADO'}
       </Text>
       {bloqueado && resultado.motivo ? (
-        <Text style={styles.motivo}>{resultado.motivo}</Text>
+        <Text style={styles.motivoText}>{resultado.motivo}</Text>
       ) : null}
     </View>
   );
@@ -47,53 +51,36 @@ export const BloqueoCard: React.FC<BloqueoCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1.5,
+    borderRadius: Theme.radius.md,
+    borderWidth:  1,
+    padding:      Theme.spacing.md,
+    gap:          Theme.spacing.xs,
   },
-  cardNeutro: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+  cardNeutral: {
+    backgroundColor: Theme.bg.card,
+    borderColor:     Theme.border.subtle,
   },
-  cardLibre: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#86efac',
-  },
-  cardBloqueado: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fca5a5',
-  },
-  fila: {
+  row: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
+    alignItems:    'center',
   },
-  icono: {
-    fontSize: 18,
+  cardLabel: {
+    ...sectionLabelStyle,
   },
-  jugadorNombre: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1e293b',
-    flexShrink: 1,
-  },
-  estadoTexto: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  textoVerde: {
-    color: '#16a34a',
-  },
-  textoRojo: {
-    color: '#dc2626',
-  },
-  motivo: {
-    fontSize: 12,
-    color: '#b91c1c',
-    marginTop: 6,
+  neutralText: {
+    fontSize:  Theme.font.size.sm,
+    color:     Theme.text.secondary,
     fontStyle: 'italic',
+  },
+  statusValue: {
+    fontSize:      Theme.font.size.md,
+    fontWeight:    Theme.font.weight.black,
+    letterSpacing: Theme.font.letterSpacing.wide,
+  },
+  motivoText: {
+    fontSize:  Theme.font.size.sm,
+    color:     Theme.status.danger.text,
+    opacity:   0.8,
+    marginTop: 2,
   },
 });
