@@ -8,6 +8,27 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user, logoutUser } = useAuth();
 
+  const modulo1Items = [
+    {
+      title: 'Tabla de Posiciones',
+      desc: 'Clasificación oficial calculada desde los resultados y diferencia de goles',
+      route: '/tabla',
+      icon: '🏆',
+      tag: 'PÚBLICO',
+      color: '#0284c7',
+      bgIcon: '#e0f2fe',
+    },
+    {
+      title: 'Fixture y Partidos',
+      desc: 'Lista de encuentros por fecha, resultados y detalle minuto a minuto con incidencias',
+      route: '/fixture',
+      icon: '⚽',
+      tag: 'PÚBLICO',
+      color: '#059669',
+      bgIcon: '#ecfdf5',
+    },
+  ];
+
   const modulo2Items = [
     {
       title: 'Partido en Vivo',
@@ -64,107 +85,145 @@ export default function HomeScreen() {
   ];
 
   return (
-    <GradientBackground><ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Banner de Bienvenida y Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.brandGroup}>
-            <View style={styles.badgeLeague}>
-              <Text style={styles.badgeLeagueText}>SANTA FE • ARGENTINA</Text>
+    <GradientBackground>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Banner de Bienvenida y Header */}
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <View style={styles.brandGroup}>
+              <View style={styles.badgeLeague}>
+                <Text style={styles.badgeLeagueText}>SANTA FE • ARGENTINA</Text>
+              </View>
+              <Text style={styles.title}>Liga Amateur Santafesina</Text>
+              <Text style={styles.leadText}>
+                Sistema Oficial de Gestión Deportiva y Operación de Encuentros
+              </Text>
             </View>
-            <Text style={styles.title}>Liga Amateur Santafesina</Text>
-            <Text style={styles.leadText}>
-              Sistema Oficial de Gestión Deportiva y Operación de Encuentros
+            {user ? (
+              <TouchableOpacity
+                onPress={() => logoutUser()}
+                style={styles.logoutBtn}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.logoutBtnText}>Cerrar Sesión</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => router.push('/auth/login' as any)}
+                style={styles.loginBtn}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.loginBtnText}>Iniciar Sesión</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.userBadge}>
+            <View style={[styles.userStatusDot, { backgroundColor: user ? '#10b981' : '#94a3b8' }]} />
+            <Text style={styles.userText}>
+              {user ? `${user.nombreCompleto} • ${user.rol}` : 'Modo Invitado (Solo Lectura)'}
             </Text>
           </View>
-          {user ? (
-            <TouchableOpacity
-              onPress={() => logoutUser()}
-              style={styles.logoutBtn}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.logoutBtnText}>Cerrar Sesión</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => router.push('/auth/login' as any)}
-              style={styles.loginBtn}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.loginBtnText}>Iniciar Sesión</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
-        <View style={styles.userBadge}>
-          <View style={[styles.userStatusDot, { backgroundColor: user ? '#10b981' : '#94a3b8' }]} />
-          <Text style={styles.userText}>
-            {user ? `${user.nombreCompleto} • ${user.rol}` : 'Modo Invitado (Solo Lectura)'}
-          </Text>
+        {/* Módulo 1: Vista Pública */}
+        <View style={styles.sectionHeadingRow}>
+          <Text style={styles.sectionTitle}>Módulo 1: Vista Pública (Sin Login)</Text>
+          <View style={[styles.sectionTag, { backgroundColor: '#e0f2fe' }]}>
+            <Text style={[styles.sectionTagText, { color: '#0369a1' }]}>LIBRE</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Módulo 2 */}
-      <View style={styles.sectionHeadingRow}>
-        <Text style={styles.sectionTitle}>Módulo 2: Operación en Vivo</Text>
-        <View style={styles.sectionTag}>
-          <Text style={styles.sectionTagText}>PRIORIDAD</Text>
-        </View>
-      </View>
-
-      {modulo2Items.map((item) => (
-        <TouchableOpacity
-          key={item.route}
-          activeOpacity={0.88}
-          onPress={() => router.push(item.route as any)}
-        >
-          <Card style={[styles.menuCard, styles.menuCardLive]}>
-            <View style={[styles.iconContainer, { backgroundColor: item.bgIcon }]}>
-              <Text style={styles.menuIcon}>{item.icon}</Text>
-            </View>
-            <View style={styles.menuInfo}>
-              <View style={styles.titleWithTag}>
-                <Text style={styles.itemTitle}>{item.title}</Text>
-                {item.tag && (
-                  <View style={styles.livePill}>
-                    <Text style={styles.livePillText}>{item.tag}</Text>
-                  </View>
-                )}
+        {modulo1Items.map((item) => (
+          <TouchableOpacity
+            key={item.route}
+            activeOpacity={0.88}
+            onPress={() => router.push(item.route as any)}
+          >
+            <Card style={styles.menuCard}>
+              <View style={[styles.iconContainer, { backgroundColor: item.bgIcon }]}>
+                <Text style={styles.menuIcon}>{item.icon}</Text>
               </View>
-              <Text style={styles.itemDesc}>{item.desc}</Text>
-            </View>
-            <View style={styles.arrowContainer}>
-              <Text style={styles.arrow}>→</Text>
-            </View>
-          </Card>
-        </TouchableOpacity>
-      ))}
+              <View style={styles.menuInfo}>
+                <View style={styles.titleWithTag}>
+                  <Text style={styles.itemTitle}>{item.title}</Text>
+                  {item.tag && (
+                    <View style={[styles.livePill, { backgroundColor: '#e0f2fe' }]}>
+                      <Text style={[styles.livePillText, { color: '#0369a1' }]}>{item.tag}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.itemDesc}>{item.desc}</Text>
+              </View>
+              <View style={styles.arrowContainer}>
+                <Text style={styles.arrow}>→</Text>
+              </View>
+            </Card>
+          </TouchableOpacity>
+        ))}
 
-      {/* Módulo 3 */}
-      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
-        Módulo 3: Administración y Torneos
-      </Text>
-      {modulo3Items.map((item) => (
-        <TouchableOpacity
-          key={item.route}
-          activeOpacity={0.88}
-          onPress={() => router.push(item.route as any)}
-        >
-          <Card style={styles.menuCard}>
-            <View style={[styles.iconContainer, { backgroundColor: item.bgIcon }]}>
-              <Text style={styles.menuIcon}>{item.icon}</Text>
-            </View>
-            <View style={styles.menuInfo}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              <Text style={styles.itemDesc}>{item.desc}</Text>
-            </View>
-            <View style={styles.arrowContainer}>
-              <Text style={styles.arrow}>→</Text>
-            </View>
-          </Card>
-        </TouchableOpacity>
-      ))}
-    </ScrollView></GradientBackground>
+        {/* Módulo 2: Operación en Vivo */}
+        <View style={[styles.sectionHeadingRow, { marginTop: 24 }]}>
+          <Text style={styles.sectionTitle}>Módulo 2: Operación en Vivo</Text>
+          <View style={styles.sectionTag}>
+            <Text style={styles.sectionTagText}>PRIORIDAD</Text>
+          </View>
+        </View>
+
+        {modulo2Items.map((item) => (
+          <TouchableOpacity
+            key={item.route}
+            activeOpacity={0.88}
+            onPress={() => router.push(item.route as any)}
+          >
+            <Card style={StyleSheet.flatten([styles.menuCard, styles.menuCardLive])}>
+              <View style={[styles.iconContainer, { backgroundColor: item.bgIcon }]}>
+                <Text style={styles.menuIcon}>{item.icon}</Text>
+              </View>
+              <View style={styles.menuInfo}>
+                <View style={styles.titleWithTag}>
+                  <Text style={styles.itemTitle}>{item.title}</Text>
+                  {item.tag && (
+                    <View style={styles.livePill}>
+                      <Text style={styles.livePillText}>{item.tag}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.itemDesc}>{item.desc}</Text>
+              </View>
+              <View style={styles.arrowContainer}>
+                <Text style={styles.arrow}>→</Text>
+              </View>
+            </Card>
+          </TouchableOpacity>
+        ))}
+
+        {/* Módulo 3: Administración y Torneos */}
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
+          Módulo 3: Administración y Torneos
+        </Text>
+        {modulo3Items.map((item) => (
+          <TouchableOpacity
+            key={item.route}
+            activeOpacity={0.88}
+            onPress={() => router.push(item.route as any)}
+          >
+            <Card style={styles.menuCard}>
+              <View style={[styles.iconContainer, { backgroundColor: item.bgIcon }]}>
+                <Text style={styles.menuIcon}>{item.icon}</Text>
+              </View>
+              <View style={styles.menuInfo}>
+                <Text style={styles.itemTitle}>{item.title}</Text>
+                <Text style={styles.itemDesc}>{item.desc}</Text>
+              </View>
+              <View style={styles.arrowContainer}>
+                <Text style={styles.arrow}>→</Text>
+              </View>
+            </Card>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </GradientBackground>
   );
 }
 

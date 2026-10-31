@@ -1,31 +1,28 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { colores } from '../constants/liga-tema';
 
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
-
   return (
     <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
+      backgroundColor={colores.fondo}
+      indicatorColor={colores.primarioClaro}
+      tintColor={colores.primario}
+      iconColor={{ default: colores.textoSuave, selected: colores.primario }}
+      labelStyle={{ default: { color: colores.textoSuave }, selected: { color: colores.primario } }}>
+      <NativeTabs.Trigger name="tabla">
+        <NativeTabs.Trigger.Label>Tabla</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="trophy.fill" md="emoji_events" />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
+      <NativeTabs.Trigger name="partidos">
+        <NativeTabs.Trigger.Label>Partidos</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="sportscourt.fill" md="sports_soccer" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="suspendidos">
+        <NativeTabs.Trigger.Label>Suspendidos</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="exclamationmark.triangle.fill" md="warning" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

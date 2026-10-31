@@ -1,4 +1,4 @@
-// Pantalla de Programación y Consulta de Partidos
+﻿// Pantalla de Programación y Consulta de Partidos
 // Diseño Premium Oscuro alineado a LigaSF (Theme)
 
 import React, { useState, useEffect, useCallback } from 'react';
