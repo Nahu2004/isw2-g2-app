@@ -7,6 +7,7 @@ import {
   Alert,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { getPartidos, programarPartido, eliminarPartido } from '@/api/partidosApi';
 import { getTorneos } from '@/api/catalogosApi';
@@ -61,37 +62,57 @@ export default function PartidosScreen() {
     }
   };
 
+    const ejecutarCancelacion = async (partido: Partido) => {
+    try {
+      await eliminarPartido(partido.id);
+      if (Platform.OS === 'web') {
+        window.alert('Partido cancelado satisfactoriamente.');
+      } else {
+        Alert.alert('Éxito', 'Partido cancelado');
+      }
+      cargarDatos();
+    } catch (e: any) {
+      const err = e.message || 'No se pudo eliminar el partido';
+      if (Platform.OS === 'web') {
+        window.alert('Error: ' + err);
+      } else {
+        Alert.alert('Error', err);
+      }
+    }
+  };
+
   const handleEliminar = (partido: Partido) => {
     if (partido.estado !== 'PROGRAMADO') {
-      Alert.alert(
-        'Acción no permitida',
-        'Solo se pueden cancelar partidos que estén en estado PROGRAMADO.'
-      );
+      const msg = 'Solo se pueden cancelar partidos que estén en estado PROGRAMADO.';
+      if (Platform.OS === 'web') {
+        window.alert(msg);
+      } else {
+        Alert.alert('Acción no permitida', msg);
+      }
       return;
     }
 
-    Alert.alert(
-      'Cancelar Partido',
-      `¿Deseas desprogramar el encuentro ${partido.nombreEquipoLocal || 'Local'} vs ${partido.nombreEquipoVisitante || 'Visitante'}?`,
-      [
-        { text: 'Volver', style: 'cancel' },
-        {
-          text: 'Desprogramar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await eliminarPartido(partido.id);
-              Alert.alert('Éxito', 'Partido cancelado');
-              cargarDatos();
-            } catch (e: any) {
-              Alert.alert('Error', e.message || 'No se pudo eliminar el partido');
-            }
-          },
-        },
-      ]
-    );
-  };
+    const mensaje = "¿Deseas desprogramar el encuentro " + (partido.nombreEquipoLocal || "Local") + " vs " + (partido.nombreEquipoVisitante || "Visitante") + "?";
 
+    if (Platform.OS === 'web') {
+      if (window.confirm(mensaje)) {
+        ejecutarCancelacion(partido);
+      }
+    } else {
+      Alert.alert(
+        'Cancelar Partido',
+        mensaje,
+        [
+          { text: 'Volver', style: 'cancel' },
+          {
+            text: 'Desprogramar',
+            style: 'destructive',
+            onPress: () => ejecutarCancelacion(partido),
+          },
+        ]
+      );
+    }
+  };
   const formatearFechaHora = (isoStr: string) => {
     try {
       const d = new Date(isoStr);
@@ -438,5 +459,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
 });
+
+
+
 
 
