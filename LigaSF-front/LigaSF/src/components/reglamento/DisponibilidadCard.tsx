@@ -1,12 +1,13 @@
-// Muestra el resultado de una consulta de disponibilidad (cancha o árbitro).
-// Estado verde = disponible, rojo = ocupado con motivo del conflicto.
+// Card de resultado de disponibilidad — diseño premium oscuro
+// Estados: neutral (sin consultar) / cargando / disponible / no disponible
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Theme, sectionLabelStyle } from '@/constants/theme';
 import type { DisponibilidadResponse } from '@/api/types';
 
 interface DisponibilidadCardProps {
-  titulo: string;           // Ej: "Cancha Municipal" o "Árbitro Pérez"
+  titulo: string;
   resultado: DisponibilidadResponse | null;
   cargando?: boolean;
 }
@@ -16,37 +17,52 @@ export const DisponibilidadCard: React.FC<DisponibilidadCardProps> = ({
   resultado,
   cargando = false,
 }) => {
+  // ── Estado: cargando ──────────────────────────────────────────────────────
   if (cargando) {
     return (
-      <View style={[styles.card, styles.cardNeutro]}>
-        <Text style={styles.titulo}>{titulo}</Text>
-        <Text style={styles.estadoTexto}>Consultando...</Text>
+      <View style={[styles.card, styles.cardNeutral]}>
+        <Text style={styles.cardLabel}>{titulo.toUpperCase()}</Text>
+        <Text style={styles.statusText}>Verificando...</Text>
       </View>
     );
   }
 
+  // ── Estado: sin consultar ─────────────────────────────────────────────────
   if (!resultado) {
     return (
-      <View style={[styles.card, styles.cardNeutro]}>
-        <Text style={styles.titulo}>{titulo}</Text>
-        <Text style={styles.estadoTexto}>Sin consultar</Text>
+      <View style={[styles.card, styles.cardNeutral]}>
+        <Text style={styles.cardLabel}>{titulo.toUpperCase()}</Text>
+        <Text style={styles.statusTextNeutral}>Sin consultar</Text>
       </View>
     );
   }
 
+  // ── Estado: con resultado ─────────────────────────────────────────────────
   const disponible = resultado.disponible;
+  const statusTheme = disponible ? Theme.status.success : Theme.status.danger;
 
   return (
-    <View style={[styles.card, disponible ? styles.cardDisponible : styles.cardOcupado]}>
-      <View style={styles.fila}>
-        <Text style={styles.icono}>{disponible ? '✅' : '❌'}</Text>
-        <Text style={styles.titulo}>{titulo}</Text>
+    <View style={[
+      styles.card,
+      {
+        backgroundColor: statusTheme.bg,
+        borderColor:     statusTheme.border,
+      },
+    ]}>
+      {/* Label + icono en fila */}
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>{titulo.toUpperCase()}</Text>
+        <Text style={styles.icon}>{disponible ? '●' : '●'}</Text>
       </View>
-      <Text style={[styles.estadoTexto, disponible ? styles.textoVerde : styles.textoRojo]}>
-        {disponible ? 'Disponible' : 'No disponible'}
+
+      {/* Estado principal */}
+      <Text style={[styles.statusValue, { color: statusTheme.text }]}>
+        {disponible ? 'DISPONIBLE' : 'NO DISPONIBLE'}
       </Text>
+
+      {/* Motivo si está ocupado */}
       {!disponible && resultado.motivo ? (
-        <Text style={styles.motivo}>{resultado.motivo}</Text>
+        <Text style={styles.motivoText}>{resultado.motivo}</Text>
       ) : null}
     </View>
   );
@@ -54,54 +70,47 @@ export const DisponibilidadCard: React.FC<DisponibilidadCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1.5,
+    borderRadius: Theme.radius.md,
+    borderWidth: 1,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
+    gap: Theme.spacing.xs,
   },
-  cardNeutro: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+  cardNeutral: {
+    backgroundColor: Theme.bg.card,
+    borderColor:     Theme.border.subtle,
   },
-  cardDisponible: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#86efac',
-  },
-  cardOcupado: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fca5a5',
-  },
-  fila: {
+  row: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
+    alignItems:    'center',
+    justifyContent: 'space-between',
   },
-  icono: {
-    fontSize: 16,
+  cardLabel: {
+    ...sectionLabelStyle,
   },
-  titulo: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
-    flexShrink: 1,
+  icon: {
+    fontSize: 8,
+    color: Theme.text.secondary,
   },
-  estadoTexto: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#64748b',
+  statusText: {
+    fontSize:   Theme.font.size.sm,
+    fontWeight: Theme.font.weight.medium,
+    color:      Theme.text.secondary,
+  },
+  statusTextNeutral: {
+    fontSize:   Theme.font.size.sm,
+    color:      Theme.text.secondary,
+    fontStyle:  'italic',
+  },
+  statusValue: {
+    fontSize:      Theme.font.size.md,
+    fontWeight:    Theme.font.weight.black,
+    letterSpacing: Theme.font.letterSpacing.wide,
+  },
+  motivoText: {
+    fontSize:  Theme.font.size.sm,
+    color:     Theme.status.danger.text,
+    opacity:   0.8,
     marginTop: 2,
-  },
-  textoVerde: {
-    color: '#16a34a',
-  },
-  textoRojo: {
-    color: '#dc2626',
-  },
-  motivo: {
-    fontSize: 12,
-    color: '#b91c1c',
-    marginTop: 4,
-    fontStyle: 'italic',
   },
 });

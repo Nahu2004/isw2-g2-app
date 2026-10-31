@@ -55,7 +55,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="reglamento"
           options={{
-            title: 'Reglamento y Sanciones',
+            headerShown: false,
           }}
         />
         <Stack.Screen
