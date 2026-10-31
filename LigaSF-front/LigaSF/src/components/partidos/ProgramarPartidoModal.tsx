@@ -47,9 +47,10 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
   const [equipoVisitanteId, setEquipoVisitanteId] = useState<number | null>(null);
   const [canchaId, setCanchaId] = useState<number | null>(null);
   const [arbitroId, setArbitroId] = useState<number | null>(null);
-  
+
   // Fecha y hora (formato ISO YYYY-MM-DDTHH:mm:00)
-  const [fechaStr, setFechaStr] = useState('2026-11-01');
+  const hoyStr = new Date().toISOString().split('T')[0];
+  const [fechaStr, setFechaStr] = useState(hoyStr);
   const [horaStr, setHoraStr] = useState('15:00');
 
   const [submitting, setSubmitting] = useState(false);
@@ -83,7 +84,8 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
       setCanchas(listaCanchas);
       setArbitros(listaArbitros);
 
-      const targetTorneoId = torneoIdDefault || (listaTorneos.length > 0 ? listaTorneos[0].id : null);
+      const targetTorneoId =
+        torneoIdDefault || (listaTorneos.length > 0 ? listaTorneos[0].id : null);
       if (targetTorneoId) setTorneoId(targetTorneoId);
       if (listaCanchas.length > 0) setCanchaId(listaCanchas[0].id);
       if (listaArbitros.length > 0) setArbitroId(listaArbitros[0].id);
@@ -99,6 +101,9 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
       if (listaEquipos.length >= 2) {
         setEquipoLocalId(listaEquipos[0].id);
         setEquipoVisitanteId(listaEquipos[1].id);
+      } else if (listaEquipos.length === 1) {
+        setEquipoLocalId(listaEquipos[0].id);
+        setEquipoVisitanteId(null);
       } else {
         setEquipoLocalId(null);
         setEquipoVisitanteId(null);
@@ -110,25 +115,25 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
 
   const validar = () => {
     const err: { [key: string]: string } = {};
-    if (!torneoId) err.torneoId = 'Seleccione un torneo';
-    
-    const numF = parseInt(numeroFecha, 10);
-    if (isNaN(numF) || numF < 1) err.numeroFecha = 'La fecha debe ser ≥ 1';
+    if (!torneoId) err.torneoId = 'Debe seleccionar un torneo';
 
-    if (!equipoLocalId) err.equipoLocalId = 'Seleccione equipo local';
-    if (!equipoVisitanteId) err.equipoVisitanteId = 'Seleccione equipo visitante';
+    const numF = parseInt(numeroFecha, 10);
+    if (isNaN(numF) || numF < 1) err.numeroFecha = 'El número de fecha debe ser al menos 1';
+
+    if (!equipoLocalId) err.equipoLocalId = 'Seleccione el equipo local';
+    if (!equipoVisitanteId) err.equipoVisitanteId = 'Seleccione el equipo visitante';
     if (equipoLocalId && equipoVisitanteId && equipoLocalId === equipoVisitanteId) {
-      err.equipos = 'El equipo local y visitante no pueden ser el mismo';
+      err.equipos = 'El equipo local y el visitante no pueden ser el mismo';
     }
 
     if (!canchaId) err.canchaId = 'Seleccione una cancha';
     if (!arbitroId) err.arbitroId = 'Seleccione un árbitro';
 
-    if (!fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      err.fecha = 'Formato de fecha inválido (debe ser AAAA-MM-DD)';
+    if (!fechaStr || !fechaStr.trim().match(/^\d{4}-\d{2}-\d{2}$/)) {
+      err.fecha = 'Formato de fecha inválido (AAAA-MM-DD)';
     }
-    if (!horaStr.match(/^\d{2}:\d{2}$/)) {
-      err.hora = 'Formato de hora inválido (debe ser HH:mm)';
+    if (!horaStr || !horaStr.trim().match(/^\d{2}:\d{2}$/)) {
+      err.hora = 'Formato de hora inválido (HH:mm)';
     }
 
     setErrores(err);
@@ -136,9 +141,23 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
   };
 
   const handleGuardar = async () => {
-    if (!validar() || !torneoId || !equipoLocalId || !equipoVisitanteId || !canchaId || !arbitroId) return;
+    if (!validar()) {
+      const primerError = Object.values(errores)[0] || 'Por favor complete todos los campos requeridos.';
+      Alert.alert('Datos Incompletos', primerError);
+      return;
+    }
 
-    const fechaHoraInicio = `${fechaStr}T${horaStr}:00`;
+    if (!torneoId || !equipoLocalId || !equipoVisitanteId || !canchaId || !arbitroId) {
+      Alert.alert(
+        'Faltan datos',
+        equipos.length < 2
+          ? 'El torneo seleccionado necesita al menos 2 equipos registrados para programar un partido.'
+          : 'Por favor seleccione torneo, equipos, cancha y árbitro.'
+      );
+      return;
+    }
+
+    const fechaHoraInicio = `${fechaStr.trim()}T${horaStr.trim()}:00`;
 
     try {
       setSubmitting(true);
@@ -153,7 +172,10 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
       });
       onClose();
     } catch (e: any) {
-      Alert.alert('Conflicto / Error de Programación', e.message || 'No se pudo programar el partido.');
+      Alert.alert(
+        'Conflicto / Error de Programación',
+        e.message || 'No se pudo programar el partido en el servidor.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -168,6 +190,7 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* TORNEO */}
             <Text style={styles.label}>1. Torneo:</Text>
+            {errores.torneoId ? <Text style={styles.errorText}>⚠️ {errores.torneoId}</Text> : null}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
               {torneos.map((t) => (
                 <TouchableOpacity
@@ -194,7 +217,19 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
 
             {/* ENFRENTAMIENTO */}
             <Text style={styles.label}>3. Equipos del Encuentro:</Text>
-            {errores.equipos ? <Text style={styles.errorText}>{errores.equipos}</Text> : null}
+            {errores.equipos ? <Text style={styles.errorText}>⚠️ {errores.equipos}</Text> : null}
+            {errores.equipoLocalId ? (
+              <Text style={styles.errorText}>⚠️ {errores.equipoLocalId}</Text>
+            ) : null}
+            {errores.equipoVisitanteId ? (
+              <Text style={styles.errorText}>⚠️ {errores.equipoVisitanteId}</Text>
+            ) : null}
+
+            {equipos.length < 2 && (
+              <Text style={styles.warningText}>
+                ⚠️ Este torneo cuenta con {equipos.length} equipo(s). Se requieren al menos 2 equipos para programar.
+              </Text>
+            )}
 
             <Text style={styles.subLabel}>🏠 Equipo Local:</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
@@ -228,6 +263,7 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
 
             {/* CANCHA */}
             <Text style={styles.label}>4. Cancha / Predio:</Text>
+            {errores.canchaId ? <Text style={styles.errorText}>⚠️ {errores.canchaId}</Text> : null}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
               {canchas.map((c) => (
                 <TouchableOpacity
@@ -244,6 +280,7 @@ export const ProgramarPartidoModal: React.FC<ProgramarPartidoModalProps> = ({
 
             {/* ÁRBITRO */}
             <Text style={styles.label}>5. Árbitro Designado:</Text>
+            {errores.arbitroId ? <Text style={styles.errorText}>⚠️ {errores.arbitroId}</Text> : null}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizPills}>
               {arbitros.map((a) => (
                 <TouchableOpacity
@@ -370,6 +407,14 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontSize: 12,
     marginBottom: 4,
+  },
+  warningText: {
+    color: '#d97706',
+    fontSize: 12,
+    marginVertical: 4,
+    backgroundColor: '#fef3c7',
+    padding: 8,
+    borderRadius: 8,
   },
   row: {
     flexDirection: 'row',

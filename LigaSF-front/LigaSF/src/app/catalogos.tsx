@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import {
   crearArbitro,
 } from '@/api/catalogosApi';
 import { Torneo, Cancha, Arbitro } from '@/api/types';
-import { Card, Button, InputField, LoadingView, ErrorView, EmptyView } from '@/components/common';
+import { Card, Button, InputField, LoadingView, ErrorView, EmptyView, GradientBackground } from '@/components/common';
 
 type SeccionActiva = 'torneos' | 'canchas' | 'arbitros';
 
