@@ -112,74 +112,74 @@ const styles = StyleSheet.create({
   // Header
   header: {
     paddingHorizontal: Theme.spacing.lg,
-    paddingTop: Theme.spacing.lg,
-    paddingBottom: Theme.spacing.md,
+    paddingTop:        Theme.spacing.lg,
+    paddingBottom:     Theme.spacing.md,
   },
   backBtn: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: Theme.spacing.xs,
-    alignSelf: 'flex-start',
+    alignItems:    'center',
+    gap:           4,
+    marginBottom:  Theme.spacing.xs,
+    alignSelf:     'flex-start',
   },
   backArrow: {
-    fontSize: 22,
-    color: Theme.text.accent,
+    fontSize:   22,
+    color:      Theme.text.accent,
     lineHeight: 24,
     fontWeight: Theme.font.weight.bold,
   },
   backText: {
-    fontSize: Theme.font.size.sm,
-    color: Theme.text.accent,
+    fontSize:   Theme.font.size.sm,
+    color:      Theme.text.accent,
     fontWeight: Theme.font.weight.medium,
   },
   headerTitle: {
-    fontSize: Theme.font.size.xxl,
-    fontWeight: Theme.font.weight.black,
-    color: Theme.text.primary,
+    fontSize:      Theme.font.size.xxl,
+    fontWeight:    Theme.font.weight.black,
+    color:         Theme.text.primary,
     letterSpacing: Theme.font.letterSpacing.tight,
   },
 
   // Tabs
   tabsBar: {
-    flexDirection: 'row',
+    flexDirection:     'row',
     paddingHorizontal: Theme.spacing.lg,
-    gap: Theme.spacing.xl,
+    gap:               Theme.spacing.xl,
   },
   tabItem: {
     paddingBottom: Theme.spacing.sm,
-    alignItems: 'center',
-    position: 'relative',
+    alignItems:    'center',
+    position:      'relative',
   },
   tabLabel: {
-    fontSize: Theme.font.size.xs,
-    fontWeight: Theme.font.weight.bold,
+    fontSize:      Theme.font.size.xs,
+    fontWeight:    Theme.font.weight.bold,
     letterSpacing: Theme.font.letterSpacing.wide,
-    color: Theme.text.secondary,
+    color:         Theme.text.secondary,
   },
   tabLabelActivo: {
     color: Theme.text.accent,
   },
   tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
+    position:        'absolute',
+    bottom:          0,
+    left:            0,
+    right:           0,
+    height:          2,
     backgroundColor: Theme.accent.DEFAULT,
-    borderRadius: 1,
+    borderRadius:    1,
   },
 
   // Layout
   separator: {
-    height: 1,
+    height:          1,
     backgroundColor: Theme.border.subtle,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    padding: Theme.spacing.lg,
+    padding:       Theme.spacing.lg,
     paddingBottom: Theme.spacing.xxl,
   },
 });

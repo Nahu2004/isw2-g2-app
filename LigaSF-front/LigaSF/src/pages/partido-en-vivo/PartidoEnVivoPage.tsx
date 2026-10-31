@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  SafeAreaView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -16,7 +17,7 @@ import { partidosService } from '@/api/partidosService';
 import { eventosService } from '@/api/eventosService';
 import { jugadoresService } from '@/api/jugadoresService';
 import { Partido, EventoPartido, Jugador, EstadoPartido, TipoEvento } from '@/api/types';
-import { Card, Button, EstadoBadge, ConfirmationModal, GradientBackground } from '@/components/common';
+import { Button, EstadoBadge, ConfirmationModal } from '@/components/common';
 import { RegistrarEventoModal } from './RegistrarEventoModal';
 import { EventosTimeline } from './EventosTimeline';
 
@@ -244,33 +245,33 @@ export const PartidoEnVivoPage: React.FC = () => {
 
   if (cargando) {
     return (
-      <GradientBackground>
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingCenter}>
-          <ActivityIndicator size="large" color="#38bdf8" />
+          <ActivityIndicator size="large" color="#7DD3FC" />
           <Text style={styles.loadingText}>Conectando con la mesa de control en vivo...</Text>
         </View>
-      </GradientBackground>
+      </SafeAreaView>
     );
   }
 
   if (!partido) {
     return (
-      <GradientBackground>
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingCenter}>
           <Text style={styles.emptyTitle}>Partido no encontrado</Text>
           <Button title="Volver a Partidos" onPress={() => router.push('/partidos' as any)} />
         </View>
-      </GradientBackground>
+      </SafeAreaView>
     );
   }
 
   return (
-    <GradientBackground>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refrescando} onRefresh={() => cargarDatos(true)} tintColor="#38bdf8" />
+          <RefreshControl refreshing={refrescando} onRefresh={() => cargarDatos(true)} tintColor="#7DD3FC" />
         }
       >
         {/* Toast Alert */}
@@ -292,7 +293,7 @@ export const PartidoEnVivoPage: React.FC = () => {
           </View>
         )}
 
-        {/* Barra superior con letras blancas y contraste sobre el fondo azul */}
+        {/* Barra superior de navegación */}
         <View style={styles.topInfoRow}>
           <TouchableOpacity
             style={styles.backLink}
@@ -383,7 +384,7 @@ export const PartidoEnVivoPage: React.FC = () => {
         </View>
 
         {/* Controles del Ciclo de Vida del Partido (RN-05) */}
-        <Card style={styles.lifecycleCard}>
+        <View style={styles.lifecycleCard}>
           <View style={styles.cardHeaderSmall}>
             <Text style={styles.sectionHeaderTitle}>Control de Ciclo de Vida (RN-05)</Text>
             <Text style={styles.sectionHeaderSubtitle}>
@@ -440,10 +441,10 @@ export const PartidoEnVivoPage: React.FC = () => {
               </View>
             )}
           </View>
-        </Card>
+        </View>
 
         {/* Sección Registro de Incidencias (RN-04) */}
-        <Card style={styles.eventsCard}>
+        <View style={styles.eventsCard}>
           <View style={styles.eventsHeaderRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.sectionHeaderTitle}>Incidencias y Cronología</Text>
@@ -470,7 +471,7 @@ export const PartidoEnVivoPage: React.FC = () => {
             onEliminarEvento={solicitarEliminarEvento}
             deletingId={deletingEventoId}
           />
-        </Card>
+        </View>
 
         {/* Modales */}
         <RegistrarEventoModal
@@ -509,11 +510,15 @@ export const PartidoEnVivoPage: React.FC = () => {
           onCancel={() => setConfirmDeleteModal({ visible: false, evento: null })}
         />
       </ScrollView>
-    </GradientBackground>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#0A0A0A',
+  },
   container: {
     flex: 1,
   },
@@ -531,7 +536,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   loadingText: {
-    color: '#93c5fd',
+    color: '#7DD3FC',
     marginTop: 14,
     fontSize: 14,
     fontWeight: '600',
@@ -539,7 +544,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   topInfoRow: {
@@ -552,12 +557,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#161616',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: '#262626',
   },
   backLinkText: {
-    color: '#38bdf8',
+    color: '#7DD3FC',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -565,55 +570,59 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    backgroundColor: '#161616',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#262626',
   },
   userRoleText: {
-    color: '#e2e8f0',
+    color: '#A3A3A3',
     fontSize: 12,
     fontWeight: '600',
   },
   toast: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0284c7',
+    backgroundColor: '#1E3A4A',
     borderRadius: 10,
     padding: 14,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#7DD3FC',
   },
   toastError: {
-    backgroundColor: '#dc2626',
+    backgroundColor: 'rgba(220, 38, 38, 0.15)',
+    borderColor: 'rgba(220, 38, 38, 0.4)',
   },
   toastSuccess: {
-    backgroundColor: '#16a34a',
+    backgroundColor: 'rgba(22, 163, 74, 0.15)',
+    borderColor: 'rgba(22, 163, 74, 0.4)',
   },
   toastIcon: {
     fontSize: 16,
     marginRight: 8,
   },
   toastText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
     flex: 1,
   },
   toastClose: {
-    color: '#ffffff',
+    color: '#A3A3A3',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },
   scoreCard: {
-    backgroundColor: 'rgba(11, 30, 54, 0.85)',
+    backgroundColor: '#161616',
     borderRadius: 20,
     padding: 22,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    borderColor: '#262626',
     ...Platform.select({
       web: {
-        boxShadow: '0 12px 30px -4px rgba(2, 132, 199, 0.25)',
+        boxShadow: '0 12px 30px -4px rgba(0, 0, 0, 0.5)',
       } as any,
     }),
   },
@@ -623,13 +632,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: '#262626',
     paddingBottom: 12,
   },
   tournamentName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#FFFFFF',
     letterSpacing: -0.2,
   },
   matchupContainer: {
@@ -647,12 +656,12 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#262626',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: '#3a3a3a',
   },
   teamBadgeIcon: {
     fontSize: 26,
@@ -660,7 +669,7 @@ const styles = StyleSheet.create({
   teamNameText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: -0.2,
   },
@@ -669,12 +678,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#262626',
   },
   teamSideLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#94a3b8',
+    color: '#A3A3A3',
     letterSpacing: 0.8,
   },
   scoreCenter: {
@@ -684,22 +693,22 @@ const styles = StyleSheet.create({
   scoreBoard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#040d1a',
+    backgroundColor: '#0A0A0A',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#38bdf8',
+    borderColor: '#7DD3FC',
     ...Platform.select({
       web: {
-        boxShadow: '0 0 25px rgba(56, 189, 248, 0.25)',
+        boxShadow: '0 0 25px rgba(125, 211, 252, 0.15)',
       } as any,
     }),
   },
   scoreNumber: {
     fontSize: 42,
     fontWeight: '900',
-    color: '#ffffff',
+    color: '#FFFFFF',
     minWidth: 44,
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
@@ -708,36 +717,36 @@ const styles = StyleSheet.create({
   scoreDivider: {
     fontSize: 34,
     fontWeight: '800',
-    color: '#38bdf8',
+    color: '#7DD3FC',
     marginHorizontal: 4,
   },
   liveClockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    backgroundColor: '#262626',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#3a3a3a',
     gap: 6,
   },
   liveClockBadgeActive: {
-    backgroundColor: '#064e3b',
+    backgroundColor: 'rgba(4, 120, 87, 0.3)',
     borderColor: '#059669',
   },
   liveClockDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#94a3b8',
+    backgroundColor: '#A3A3A3',
   },
   liveClockDotPulse: {
     backgroundColor: '#4ade80',
   },
   liveClockText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -745,12 +754,12 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(4, 13, 26, 0.6)',
+    backgroundColor: '#0A0A0A',
     borderRadius: 12,
     padding: 14,
     marginTop: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: '#262626',
     gap: 12,
   },
   metaItem: {
@@ -758,18 +767,23 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     fontSize: 10,
-    color: '#7dd3fc',
+    color: '#7DD3FC',
     fontWeight: '800',
     letterSpacing: 0.5,
     marginBottom: 3,
   },
   metaValue: {
     fontSize: 13,
-    color: '#f8fafc',
+    color: '#FFFFFF',
     fontWeight: '700',
   },
   lifecycleCard: {
+    backgroundColor: '#161616',
+    borderRadius: 16,
+    padding: 18,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#262626',
   },
   cardHeaderSmall: {
     marginBottom: 14,
@@ -777,12 +791,12 @@ const styles = StyleSheet.create({
   sectionHeaderTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
   sectionHeaderSubtitle: {
     fontSize: 12,
-    color: '#64748b',
+    color: '#A3A3A3',
     marginTop: 3,
   },
   lifecycleButtons: {
@@ -794,23 +808,30 @@ const styles = StyleSheet.create({
   },
   irreversibleBanner: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(125, 211, 252, 0.05)',
     padding: 14,
     borderRadius: 10,
     borderLeftWidth: 4,
-    borderLeftColor: '#0284c7',
+    borderLeftColor: '#7DD3FC',
+    borderWidth: 1,
+    borderColor: '#262626',
   },
   irreversibleText: {
     fontSize: 13,
-    color: '#475569',
+    color: '#A3A3A3',
     lineHeight: 18,
   },
   bold: {
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#FFFFFF',
   },
   eventsCard: {
+    backgroundColor: '#161616',
+    borderRadius: 16,
+    padding: 18,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#262626',
   },
   eventsHeaderRow: {
     flexDirection: 'row',
