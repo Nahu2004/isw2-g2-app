@@ -13,8 +13,10 @@ import { getTorneos } from '@/api/catalogosApi';
 import { Partido, Torneo } from '@/api/types';
 import { Card, Button, LoadingView, ErrorView, EmptyView, GradientBackground } from '@/components/common';
 import { ProgramarPartidoModal } from '@/components/partidos/ProgramarPartidoModal';
+import { useRouter } from 'expo-router';
 
 export default function PartidosScreen() {
+  const router = useRouter();
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [torneos, setTorneos] = useState<Torneo[]>([]);
   const [torneoId, setTorneoId] = useState<number | undefined>(undefined);
@@ -436,4 +438,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
 });
+
 
