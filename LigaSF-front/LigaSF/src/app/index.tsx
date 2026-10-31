@@ -1,6 +1,8 @@
-// Dashboard Principal — Opción de Diseño Alternativa (Sports Club Pro / Grid Bento)
-// Fondo profundo #0A0A0A, tarjetas con fondo sutilmente traslúcido, acentos luminosos en hover,
-// iconografía integrada y tipografía deportiva de alto impacto.
+// Dashboard Principal — Liga Amateur Santafesina
+// Modo Público por defecto:
+// - Los visitantes no logueados acceden a la información pública: Tabla de Posiciones y Fixture / Resultados.
+// - La sección de Operación y Administración (Partido en Vivo, Equipos, Jugadores, etc.)
+//   se desbloquea al iniciar sesión con rol ADMIN o DELEGADO, o invita a autenticarse.
 
 import React from 'react';
 import {
@@ -25,16 +27,27 @@ interface DashboardItem {
   accent: string;
   badge?: string;
   isHero?: boolean;
+  requiereAuth?: boolean;
 }
 
 interface DashboardSection {
   title: string;
+  requiereAuth?: boolean;
   items: DashboardItem[];
 }
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user, logoutUser } = useAuth();
+  const estaAutenticado = !!user;
+
+  const handleNavegar = (item: DashboardItem) => {
+    if (item.requiereAuth && !estaAutenticado) {
+      router.push('/auth/login' as any);
+      return;
+    }
+    router.push(item.route as any);
+  };
 
   const sections: DashboardSection[] = [
     {
@@ -49,7 +62,7 @@ export default function HomeScreen() {
         },
         {
           title: 'Fixture y Partidos',
-          desc: 'Encuentros por fecha, tanteador y cronología de incidencias',
+          desc: 'Encuentros por fecha, tanteador oficial y cronología de incidencias',
           route: '/fixture',
           icon: '⚽',
           accent: '#38BDF8',
@@ -58,6 +71,7 @@ export default function HomeScreen() {
     },
     {
       title: 'Operación en Directo',
+      requiereAuth: true,
       items: [
         {
           title: 'Partido en Vivo',
@@ -67,11 +81,13 @@ export default function HomeScreen() {
           accent: '#EF4444',
           badge: 'TIEMPO REAL',
           isHero: true,
+          requiereAuth: true,
         },
       ],
     },
     {
       title: 'Gestión y Administración',
+      requiereAuth: true,
       items: [
         {
           title: 'Equipos',
@@ -79,6 +95,7 @@ export default function HomeScreen() {
           route: '/equipos',
           icon: '🛡️',
           accent: '#60A5FA',
+          requiereAuth: true,
         },
         {
           title: 'Jugadores',
@@ -86,6 +103,7 @@ export default function HomeScreen() {
           route: '/jugadores',
           icon: '🏃',
           accent: '#4ADE80',
+          requiereAuth: true,
         },
         {
           title: 'Catálogos Oficiales',
@@ -93,6 +111,7 @@ export default function HomeScreen() {
           route: '/catalogos',
           icon: '📋',
           accent: '#FBBF24',
+          requiereAuth: true,
         },
         {
           title: 'Programar Partidos',
@@ -100,6 +119,7 @@ export default function HomeScreen() {
           route: '/partidos',
           icon: '🗓️',
           accent: '#C084FC',
+          requiereAuth: true,
         },
         {
           title: 'Reglamento y Sanciones',
@@ -107,6 +127,7 @@ export default function HomeScreen() {
           route: '/reglamento',
           icon: '⚖️',
           accent: '#7DD3FC',
+          requiereAuth: true,
         },
       ],
     },
@@ -124,7 +145,7 @@ export default function HomeScreen() {
         {/* Hero Banner Header */}
         <View style={styles.heroCard}>
           <View style={styles.heroGlow} pointerEvents="none" />
-          
+
           <View style={styles.headerTop}>
             <View style={styles.brandGroup}>
               <View style={styles.leagueTag}>
@@ -133,11 +154,11 @@ export default function HomeScreen() {
               </View>
               <Text style={styles.title}>Liga Amateur Santafesina</Text>
               <Text style={styles.subtitle}>
-                Plataforma integral de gestión deportiva, fixture y control disciplinario
+                Portal oficial del torneo. Consulta posiciones, resultados y fixture de la temporada.
               </Text>
             </View>
 
-            {user ? (
+            {estaAutenticado ? (
               <TouchableOpacity
                 onPress={() => logoutUser()}
                 style={styles.logoutBtn}
@@ -151,7 +172,7 @@ export default function HomeScreen() {
                 style={styles.loginBtn}
                 activeOpacity={0.8}
               >
-                <Text style={styles.loginBtnText}>Iniciar Sesión</Text>
+                <Text style={styles.loginBtnText}>Acceso Oficial</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -162,96 +183,137 @@ export default function HomeScreen() {
               <View
                 style={[
                   styles.statusIndicator,
-                  { backgroundColor: user ? Theme.status.success.text : Theme.text.secondary },
+                  { backgroundColor: estaAutenticado ? Theme.status.success.text : Theme.text.secondary },
                 ]}
               />
               <Text style={styles.userText}>
-                {user ? `${user.nombreCompleto} • ${user.rol}` : 'Modo Invitado (Solo Lectura)'}
+                {estaAutenticado
+                  ? `${user.nombreCompleto} • ${user.rol}`
+                  : 'Vista Pública • Acceso libre'}
               </Text>
             </View>
+
+            {!estaAutenticado && (
+              <TouchableOpacity
+                onPress={() => router.push('/auth/login' as any)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.loginHintLink}>¿Eres árbitro o delegado? Iniciar sesión ›</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
         {/* Secciones con Bento Cards Deportivas */}
-        {sections.map((section) => (
-          <View key={section.title} style={styles.sectionWrap}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionBullet} />
-              <Text style={styles.sectionHeading}>{section.title}</Text>
-            </View>
+        {sections.map((section) => {
+          const seccionBloqueada = section.requiereAuth && !estaAutenticado;
 
-            <View style={styles.bentoGrid}>
-              {section.items.map((item) => {
-                const isHero = item.isHero;
+          return (
+            <View key={section.title} style={styles.sectionWrap}>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.sectionBullet, seccionBloqueada && { backgroundColor: Theme.text.secondary }]} />
+                <Text style={styles.sectionHeading}>{section.title}</Text>
+                {seccionBloqueada && (
+                  <View style={styles.lockPill}>
+                    <Text style={styles.lockPillText}>🔒 Requiere Acceso</Text>
+                  </View>
+                )}
+              </View>
 
-                return (
-                  <TouchableOpacity
-                    key={item.route}
-                    style={[
-                      styles.bentoCard,
-                      isHero && styles.heroBentoCard,
-                    ]}
-                    activeOpacity={0.85}
-                    onPress={() => router.push(item.route as any)}
-                  >
-                    {/* Glow sutil en la esquina superior izquierda */}
-                    <View
+              <View style={styles.bentoGrid}>
+                {section.items.map((item) => {
+                  const isHero = item.isHero;
+                  const bloqueado = item.requiereAuth && !estaAutenticado;
+
+                  return (
+                    <TouchableOpacity
+                      key={item.route}
                       style={[
-                        styles.cornerGlow,
-                        { backgroundColor: item.accent },
-                        isHero && { opacity: 0.22, width: 90, height: 90 },
+                        styles.bentoCard,
+                        isHero && styles.heroBentoCard,
+                        bloqueado && styles.bentoCardBloqueado,
                       ]}
-                      pointerEvents="none"
-                    />
-
-                    <View style={styles.bentoBody}>
-                      {/* Fila superior: Ícono circular + Badge o Flecha */}
-                      <View style={styles.bentoTop}>
-                        <View style={[styles.iconCircle, { borderColor: `${item.accent}33` }]}>
-                          <Text style={styles.bentoIcon}>{item.icon}</Text>
-                        </View>
-
-                        {item.badge ? (
-                          <View style={[styles.badgePill, { borderColor: `${item.accent}66` }]}>
-                            <View style={[styles.pulseDot, { backgroundColor: item.accent }]} />
-                            <Text style={[styles.badgePillText, { color: item.accent }]}>
-                              {item.badge}
-                            </Text>
-                          </View>
-                        ) : (
-                          <View style={styles.chevronBox}>
-                            <Text style={styles.chevron}>↗</Text>
-                          </View>
-                        )}
-                      </View>
-
-                      {/* Textos */}
-                      <View style={styles.bentoInfo}>
-                        <Text style={[styles.bentoTitle, isHero && styles.heroBentoTitle]}>
-                          {item.title}
-                        </Text>
-                        <Text style={styles.bentoDesc} numberOfLines={2}>
-                          {item.desc}
-                        </Text>
-                      </View>
-
-                      {/* Barra de progreso / acento al pie */}
-                      <View style={styles.bottomBarTrack}>
+                      activeOpacity={0.85}
+                      onPress={() => handleNavegar(item)}
+                    >
+                      {/* Glow sutil en la esquina */}
+                      {!bloqueado && (
                         <View
                           style={[
-                            styles.bottomBarFill,
+                            styles.cornerGlow,
                             { backgroundColor: item.accent },
-                            isHero && { width: '100%' },
+                            isHero && { opacity: 0.22, width: 90, height: 90 },
                           ]}
+                          pointerEvents="none"
                         />
+                      )}
+
+                      <View style={styles.bentoBody}>
+                        {/* Fila superior: Ícono circular + Badge o Flecha */}
+                        <View style={styles.bentoTop}>
+                          <View
+                            style={[
+                              styles.iconCircle,
+                              { borderColor: bloqueado ? '#2a2a30' : `${item.accent}33` },
+                            ]}
+                          >
+                            <Text style={styles.bentoIcon}>{item.icon}</Text>
+                          </View>
+
+                          {bloqueado ? (
+                            <View style={styles.lockBox}>
+                              <Text style={styles.lockIcon}>🔒</Text>
+                            </View>
+                          ) : item.badge ? (
+                            <View style={[styles.badgePill, { borderColor: `${item.accent}66` }]}>
+                              <View style={[styles.pulseDot, { backgroundColor: item.accent }]} />
+                              <Text style={[styles.badgePillText, { color: item.accent }]}>
+                                {item.badge}
+                              </Text>
+                            </View>
+                          ) : (
+                            <View style={styles.chevronBox}>
+                              <Text style={styles.chevron}>↗</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Textos */}
+                        <View style={styles.bentoInfo}>
+                          <Text
+                            style={[
+                              styles.bentoTitle,
+                              isHero && styles.heroBentoTitle,
+                              bloqueado && styles.bentoTitleBloqueado,
+                            ]}
+                          >
+                            {item.title}
+                          </Text>
+                          <Text style={styles.bentoDesc} numberOfLines={2}>
+                            {bloqueado
+                              ? 'Inicia sesión con tu cuenta oficial para acceder a este módulo.'
+                              : item.desc}
+                          </Text>
+                        </View>
+
+                        {/* Barra de progreso / acento al pie */}
+                        <View style={styles.bottomBarTrack}>
+                          <View
+                            style={[
+                              styles.bottomBarFill,
+                              { backgroundColor: bloqueado ? '#2a2a30' : item.accent },
+                              isHero && { width: '100%' },
+                            ]}
+                          />
+                        </View>
                       </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -375,6 +437,11 @@ const styles = StyleSheet.create({
     paddingTop: Theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: '#202024',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   userStatus: {
     flexDirection: 'row',
@@ -389,6 +456,11 @@ const styles = StyleSheet.create({
   userText: {
     fontSize: Theme.font.size.xs,
     color: Theme.text.secondary,
+    fontWeight: Theme.font.weight.semibold,
+  },
+  loginHintLink: {
+    fontSize: Theme.font.size.xs,
+    color: Theme.accent.DEFAULT,
     fontWeight: Theme.font.weight.semibold,
   },
 
@@ -413,6 +485,19 @@ const styles = StyleSheet.create({
     color: Theme.text.secondary,
     fontSize: Theme.font.size.xs,
   },
+  lockPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    backgroundColor: '#1c1c22',
+    borderWidth: 1,
+    borderColor: '#2e2e38',
+  },
+  lockPillText: {
+    fontSize: 10,
+    color: Theme.text.secondary,
+    fontWeight: '600',
+  },
   bentoGrid: {
     gap: 12,
   },
@@ -431,6 +516,11 @@ const styles = StyleSheet.create({
         transition: 'transform 0.16s ease, border-color 0.16s ease, background-color 0.16s ease',
       } as any,
     }),
+  },
+  bentoCardBloqueado: {
+    opacity: 0.72,
+    backgroundColor: '#111114',
+    borderColor: '#1e1e24',
   },
   heroBentoCard: {
     backgroundColor: '#1a1012',
@@ -465,6 +555,19 @@ const styles = StyleSheet.create({
   },
   bentoIcon: {
     fontSize: 20,
+  },
+  lockBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#19191e',
+    borderWidth: 1,
+    borderColor: '#272730',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lockIcon: {
+    fontSize: 12,
   },
   chevronBox: {
     width: 28,
@@ -509,6 +612,9 @@ const styles = StyleSheet.create({
     fontWeight: Theme.font.weight.bold,
     color: Theme.text.primary,
     letterSpacing: -0.2,
+  },
+  bentoTitleBloqueado: {
+    color: '#d4d4d8',
   },
   heroBentoTitle: {
     fontSize: Theme.font.size.lg,
