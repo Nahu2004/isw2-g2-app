@@ -1,6 +1,5 @@
-// Formulario para verificar disponibilidad de cancha y árbitro en un horario.
-// Implementa RN-01 y RN-02 del módulo de reglamento.
-// Carga canchas y árbitros del backend y consulta disponibilidad al enviar.
+// Formulario de validación de horarios — diseño premium oscuro
+// RN-01: disponibilidad de cancha / RN-02: disponibilidad de árbitro
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -9,9 +8,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
+  Platform,
 } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
+import { Theme, sectionLabelStyle, cardStyle } from '@/constants/theme';
 import { getCanchas, getArbitros } from '@/api/catalogosApi';
 import {
   consultarDisponibilidadCancha,
@@ -19,37 +20,42 @@ import {
 } from '@/api/reglamentoApi';
 import type { Cancha, Arbitro, DisponibilidadResponse } from '@/api/types';
 import { DisponibilidadCard } from './DisponibilidadCard';
-import { Button } from '@/components/common';
 
-// ─── Selector horizontal con pills ──────────────────────────────────────────
+// ─── Chip selector horizontal ─────────────────────────────────────────────────
 
-interface SelectorProps {
+interface ChipSelectorProps {
   label: string;
   opciones: { id: number; nombre: string }[];
   seleccionado: number | null;
   onSeleccionar: (id: number) => void;
 }
 
-const SelectorLista: React.FC<SelectorProps> = ({
+const ChipSelector: React.FC<ChipSelectorProps> = ({
   label,
   opciones,
   seleccionado,
   onSeleccionar,
 }) => (
-  <View style={styles.selectorContainer}>
-    <Text style={styles.label}>{label}</Text>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillsScroll}>
-      {opciones.map((op) => (
-        <TouchableOpacity
-          key={op.id}
-          style={[styles.pill, seleccionado === op.id && styles.pillActivo]}
-          onPress={() => onSeleccionar(op.id)}
-        >
-          <Text style={[styles.pillText, seleccionado === op.id && styles.pillTextActivo]}>
-            {op.nombre}
-          </Text>
-        </TouchableOpacity>
-      ))}
+  <View style={styles.fieldGroup}>
+    <Text style={styles.fieldLabel}>{label}</Text>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={styles.chipsRow}>
+        {opciones.map((op) => {
+          const activo = seleccionado === op.id;
+          return (
+            <TouchableOpacity
+              key={op.id}
+              style={[styles.chip, activo && styles.chipActivo]}
+              onPress={() => onSeleccionar(op.id)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.chipText, activo && styles.chipTextActivo]}>
+                {op.nombre}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </ScrollView>
   </View>
 );
@@ -57,74 +63,62 @@ const SelectorLista: React.FC<SelectorProps> = ({
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export const ValidarHorarioForm: React.FC = () => {
-  // Catálogos
-  const [canchas, setCanchas] = useState<Cancha[]>([]);
+  const [canchas, setCanchas]   = useState<Cancha[]>([]);
   const [arbitros, setArbitros] = useState<Arbitro[]>([]);
 
-  // Selección
-  const [canchaId, setCanchaId] = useState<number | null>(null);
+  const [canchaId, setCanchaId]   = useState<number | null>(null);
   const [arbitroId, setArbitroId] = useState<number | null>(null);
-  const [fechaStr, setFechaStr] = useState('2026-11-01');
-  const [horaStr, setHoraStr] = useState('16:00');
+  const [fechaHora, setFechaHora] = useState<Date>(new Date());
+  const [mostrarPicker, setMostrarPicker] = useState(false);
 
-  // Resultados
-  const [resultadoCancha, setResultadoCancha] = useState<DisponibilidadResponse | null>(null);
+  const [resultadoCancha,  setResultadoCancha]  = useState<DisponibilidadResponse | null>(null);
   const [resultadoArbitro, setResultadoArbitro] = useState<DisponibilidadResponse | null>(null);
   const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error,    setError]    = useState<string | null>(null);
 
-  // Carga inicial de catálogos
   useEffect(() => {
     Promise.all([getCanchas(), getArbitros()])
-      .then(([c, a]) => {
-        setCanchas(c);
-        setArbitros(a);
-        if (c.length > 0) setCanchaId(c[0].id);
-        if (a.length > 0) setArbitroId(a[0].id);
-      })
+      .then(([c, a]) => { setCanchas(c); setArbitros(a); })
       .catch(() => setError('No se pudieron cargar canchas y árbitros.'));
   }, []);
 
+  const opcionesCanchas  = canchas.map((c) => ({ id: c.id, nombre: c.nombre }));
   const opcionesArbitros = arbitros.map((a) => ({
     id: a.id,
     nombre: `${a.nombre} ${a.apellido}`,
   }));
 
-  const opcionesCanchas = canchas.map((c) => ({
-    id: c.id,
-    nombre: c.nombre,
-  }));
+  const handleFechaChange = (_event: DateTimePickerEvent, date?: Date) => {
+    setMostrarPicker(Platform.OS === 'ios');
+    if (date) setFechaHora(date);
+  };
+
+  const formatearISO = (date: Date): string => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return (
+      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+      `T${pad(date.getHours())}:${pad(date.getMinutes())}:00`
+    );
+  };
 
   const handleVerificar = async () => {
     if (!canchaId || !arbitroId) {
-      setError('Seleccioná una cancha y un árbitro antes de verificar.');
+      setError('Seleccioná una cancha y un árbitro.');
       return;
     }
-
-    if (!fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      setError('Formato de fecha inválido. Usá AAAA-MM-DD (ej: 2026-11-01)');
-      return;
-    }
-
-    if (!horaStr.match(/^\d{2}:\d{2}$/)) {
-      setError('Formato de hora inválido. Usá HH:mm (ej: 16:00)');
-      return;
-    }
-
     setError(null);
     setCargando(true);
     setResultadoCancha(null);
     setResultadoArbitro(null);
 
-    const inicio = `${fechaStr}T${horaStr}:00`;
-
     try {
-      const [resCancha, resArbitro] = await Promise.all([
-        consultarDisponibilidadCancha(canchaId, inicio),
+      const inicio = formatearISO(fechaHora);
+      const [resC, resA] = await Promise.all([
+        consultarDisponibilidadCancha(canchaId,  inicio),
         consultarDisponibilidadArbitro(arbitroId, inicio),
       ]);
-      setResultadoCancha(resCancha);
-      setResultadoArbitro(resArbitro);
+      setResultadoCancha(resC);
+      setResultadoArbitro(resA);
     } catch (e: any) {
       setError(e?.message || 'Error al consultar disponibilidad.');
     } finally {
@@ -132,76 +126,84 @@ export const ValidarHorarioForm: React.FC = () => {
     }
   };
 
-  const canchaSeleccionada = canchas.find((c) => c.id === canchaId);
+  const canchaSeleccionada  = canchas.find((c) => c.id === canchaId);
   const arbitroSeleccionado = arbitros.find((a) => a.id === arbitroId);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.seccionTitulo}>Verificar disponibilidad de horario</Text>
-      <Text style={styles.descripcion}>
-        Consultá si una cancha y un árbitro están libres en el horario elegido antes de programar
-        un partido (RN-01 y RN-02).
+
+      {/* Descripción */}
+      <Text style={styles.description}>
+        Verificá si una cancha y un árbitro están libres antes de programar un partido.
       </Text>
 
-      {/* Selector de cancha */}
-      <SelectorLista
-        label="Cancha"
+      {/* Cancha */}
+      <ChipSelector
+        label="CANCHA"
         opciones={opcionesCanchas}
         seleccionado={canchaId}
         onSeleccionar={setCanchaId}
       />
 
-      {/* Selector de árbitro */}
-      <SelectorLista
-        label="Árbitro"
+      {/* Árbitro */}
+      <ChipSelector
+        label="ÁRBITRO"
         opciones={opcionesArbitros}
         seleccionado={arbitroId}
         onSeleccionar={setArbitroId}
       />
 
-      {/* Selector de fecha y hora */}
-      <View style={styles.selectorContainer}>
-        <Text style={styles.label}>Fecha y Hora del Partido</Text>
-        <View style={styles.inputsRow}>
-          <View style={styles.inputCol}>
-            <Text style={styles.subLabel}>Fecha (AAAA-MM-DD)</Text>
-            <TextInput
-              style={styles.textInput}
-              value={fechaStr}
-              onChangeText={setFechaStr}
-              placeholder="2026-11-01"
-              placeholderTextColor="#94a3b8"
-            />
-          </View>
-          <View style={styles.inputCol}>
-            <Text style={styles.subLabel}>Hora (HH:mm)</Text>
-            <TextInput
-              style={styles.textInput}
-              value={horaStr}
-              onChangeText={setHoraStr}
-              placeholder="16:00"
-              placeholderTextColor="#94a3b8"
-            />
-          </View>
-        </View>
+      {/* Fecha y hora */}
+      <View style={styles.fieldGroup}>
+        <Text style={styles.fieldLabel}>FECHA Y HORA</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setMostrarPicker(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.dateValue}>
+            {fechaHora.toLocaleDateString('es-AR', {
+              weekday: 'short', day: '2-digit',
+              month: '2-digit', year: 'numeric',
+            }).toUpperCase()}
+          </Text>
+          <Text style={styles.dateTime}>
+            {fechaHora.toLocaleTimeString('es-AR', {
+              hour: '2-digit', minute: '2-digit',
+            })}
+          </Text>
+        </TouchableOpacity>
+        {mostrarPicker && (
+          <DateTimePicker
+            value={fechaHora}
+            mode="datetime"
+            display={Platform.OS === 'ios' ? 'inline' : 'default'}
+            onChange={handleFechaChange}
+            minimumDate={new Date()}
+            themeVariant="dark"
+          />
+        )}
       </View>
 
-      {/* Error de validación */}
-      {error ? <Text style={styles.errorTexto}>{error}</Text> : null}
+      {/* Error */}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Botón verificar */}
-      <Button
-        title={cargando ? 'Verificando...' : 'Verificar disponibilidad'}
+      {/* Botón */}
+      <TouchableOpacity
+        style={[styles.btn, cargando && styles.btnDisabled]}
         onPress={handleVerificar}
-        variant="primary"
         disabled={cargando}
-        style={styles.boton}
-      />
+        activeOpacity={0.8}
+      >
+        <Text style={styles.btnText}>
+          {cargando ? 'VERIFICANDO...' : 'VERIFICAR DISPONIBILIDAD'}
+        </Text>
+      </TouchableOpacity>
 
       {/* Resultados */}
-      {resultadoCancha || resultadoArbitro || cargando ? (
-        <View style={styles.resultados}>
-          <Text style={styles.resultadosTitulo}>Resultado de Disponibilidad</Text>
+      {(resultadoCancha || resultadoArbitro || cargando) ? (
+        <View style={styles.results}>
+          <Text style={styles.resultsLabel}>RESULTADO</Text>
           <DisponibilidadCard
             titulo={canchaSeleccionada?.nombre ?? 'Cancha'}
             resultado={resultadoCancha}
@@ -218,6 +220,7 @@ export const ValidarHorarioForm: React.FC = () => {
           />
         </View>
       ) : null}
+
     </View>
   );
 };
@@ -226,96 +229,96 @@ export const ValidarHorarioForm: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
+    gap: Theme.spacing.lg,
   },
-  seccionTitulo: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
+  description: {
+    fontSize:   Theme.font.size.sm,
+    color:      Theme.text.secondary,
+    lineHeight: 20,
   },
-  descripcion: {
-    fontSize: 13,
-    color: '#64748b',
-    marginBottom: 16,
-    lineHeight: 18,
+
+  // Grupos de campo
+  fieldGroup: {
+    gap: Theme.spacing.sm,
   },
-  selectorContainer: {
-    marginBottom: 16,
+  fieldLabel: {
+    ...sectionLabelStyle,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  subLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    marginBottom: 4,
-  },
-  inputsRow: {
+
+  // Chips
+  chipsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap:           Theme.spacing.sm,
   },
-  inputCol: {
-    flex: 1,
+  chip: {
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical:   Theme.spacing.xs + 2,
+    borderRadius:      Theme.radius.pill,
+    backgroundColor:   Theme.bg.card,
+    borderWidth:       1,
+    borderColor:       Theme.border.subtle,
   },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#ffffff',
-    fontSize: 14,
-    color: '#0f172a',
+  chipActivo: {
+    backgroundColor: Theme.accent.dim,
+    borderColor:     Theme.accent.DEFAULT,
   },
-  pillsScroll: {
-    flexDirection: 'row',
+  chipText: {
+    fontSize:   Theme.font.size.sm,
+    fontWeight: Theme.font.weight.medium,
+    color:      Theme.text.secondary,
   },
-  pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginRight: 8,
+  chipTextActivo: {
+    color:      Theme.text.accent,
+    fontWeight: Theme.font.weight.bold,
   },
-  pillActivo: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0284c7',
+
+  // Fecha
+  dateButton: {
+    ...cardStyle,
+    flexDirection:  'row',
+    justifyContent: 'space-between',
+    alignItems:     'center',
   },
-  pillText: {
-    fontSize: 13,
-    color: '#475569',
-    fontWeight: '500',
+  dateValue: {
+    fontSize:      Theme.font.size.sm,
+    fontWeight:    Theme.font.weight.bold,
+    color:         Theme.text.primary,
+    letterSpacing: Theme.font.letterSpacing.wide,
   },
-  pillTextActivo: {
-    color: '#ffffff',
-    fontWeight: '700',
+  dateTime: {
+    fontSize:   Theme.font.size.md,
+    fontWeight: Theme.font.weight.black,
+    color:      Theme.text.accent,
   },
-  errorTexto: {
-    color: '#dc2626',
-    fontSize: 13,
-    marginBottom: 10,
+
+  // Error
+  errorText: {
+    fontSize: Theme.font.size.sm,
+    color:    Theme.text.error,
   },
-  boton: {
-    marginBottom: 16,
+
+  // Botón principal
+  btn: {
+    backgroundColor: Theme.accent.DEFAULT,
+    borderRadius:    Theme.radius.md,
+    paddingVertical: Theme.spacing.md,
+    alignItems:      'center',
   },
-  resultados: {
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-    paddingTop: 16,
+  btnDisabled: {
+    opacity: 0.4,
   },
-  resultadosTitulo: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 12,
+  btnText: {
+    fontSize:      Theme.font.size.sm,
+    fontWeight:    Theme.font.weight.black,
+    color:         '#0A0A0A',
+    letterSpacing: Theme.font.letterSpacing.wide,
+  },
+
+  // Resultados
+  results: {
+    gap: Theme.spacing.sm,
+  },
+  resultsLabel: {
+    ...sectionLabelStyle,
   },
 });
-
-export default ValidarHorarioForm;
