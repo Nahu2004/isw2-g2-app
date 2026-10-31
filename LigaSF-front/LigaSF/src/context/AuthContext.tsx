@@ -72,11 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Ignorar
     }
     // Usuario delegado de demostración inicial si no hay sesión
-    return {
-      username: 'admin',
-      nombreCompleto: 'Carlos Delegado',
-      rol: 'ADMIN',
-    };
+    return null;
   });
 
   const logoutUser = useCallback(() => {
@@ -94,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Ignorar
     }
     try {
-      router.replace('/auth/login' as any);
+      router.replace('/' as any);
     } catch {
       // Ignorar si router aún no está montado
     }

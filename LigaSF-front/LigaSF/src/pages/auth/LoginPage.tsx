@@ -145,14 +145,12 @@ export default function LoginPage() {
               </TouchableOpacity>
             </View>
 
-            {user && (
-              <TouchableOpacity
-                onPress={() => router.replace('/' as any)}
-                style={styles.backHomeLink}
-              >
-                <Text style={styles.backHomeText}>← VOLVER AL MENÚ PRINCIPAL</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              onPress={() => router.replace('/' as any)}
+              style={styles.backHomeLink}
+            >
+              <Text style={styles.backHomeText}>VOLVER AL INICIO (MODO INVITADO)</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Footer */}
