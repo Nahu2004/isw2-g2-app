@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+﻿import { Stack } from 'expo-router';
 import { AuthProvider } from '@/context/AuthContext';
 import '../global.css';
 
@@ -86,6 +86,12 @@ export default function RootLayout() {
           name="auth/login"
           options={{
             title: 'Acceso Oficial',
+          }}
+        />
+        <Stack.Screen
+          name="admin/usuarios"
+          options={{
+            title: 'Gestión de Usuarios',
           }}
         />
       </Stack>

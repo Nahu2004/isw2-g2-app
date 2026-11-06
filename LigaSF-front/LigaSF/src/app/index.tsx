@@ -1,4 +1,4 @@
-// Dashboard Principal — Liga Amateur Santafesina
+﻿// Dashboard Principal — Liga Amateur Santafesina
 // Modo Público por defecto:
 // - Los visitantes no logueados acceden a la información pública: Tabla de Posiciones y Fixture / Resultados.
 // - La sección de Operación y Administración (Partido en Vivo, Equipos, Jugadores, etc.)
@@ -28,6 +28,7 @@ interface DashboardItem {
   badge?: string;
   isHero?: boolean;
   requiereAuth?: boolean;
+  soloAdmin?: boolean;
 }
 
 interface DashboardSection {
@@ -129,6 +130,15 @@ export default function HomeScreen() {
           accent: '#7DD3FC',
           requiereAuth: true,
         },
+        {
+          title: 'Usuarios',
+          desc: 'Dar de alta delegados y administradores, gestionar contraseñas y estados',
+          route: '/admin/usuarios',
+          icon: '👤',
+          accent: '#E879F9',
+          requiereAuth: true,
+          soloAdmin: true,
+        },
       ],
     },
   ];
@@ -221,7 +231,7 @@ export default function HomeScreen() {
               </View>
 
               <View style={styles.bentoGrid}>
-                {section.items.map((item) => {
+                {section.items.filter(item => !item.soloAdmin || user?.rol === 'ADMIN').map((item) => {
                   const isHero = item.isHero;
                   const bloqueado = item.requiereAuth && !estaAutenticado;
 
