@@ -5,7 +5,9 @@
  * y extracción uniforme de message/mensaje del backend).
  */
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.0.225:8080/api';
+import { getApiBaseUrl } from '../utils/apiUrl';
+
+const BASE_URL = getApiBaseUrl();
 
 type InterceptorCallback = (config: any) => any | Promise<any>;
 type ErrorInterceptorCallback = (error: any) => any | Promise<any>;

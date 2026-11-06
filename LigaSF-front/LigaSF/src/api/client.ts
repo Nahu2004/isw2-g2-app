@@ -1,7 +1,9 @@
 // Cliente HTTP base configurado con fetch
 // Maneja Base URL, inyección de token JWT, y parseo de respuestas/errores
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.0.225:8080/api';
+import { getApiBaseUrl } from '../utils/apiUrl';
+
+const BASE_URL = getApiBaseUrl();
 
 let authToken: string | null = null;
 
