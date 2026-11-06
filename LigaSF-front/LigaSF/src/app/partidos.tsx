@@ -15,6 +15,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 import { getPartidos, programarPartido, eliminarPartido } from '@/api/partidosApi';
 import { getTorneos } from '@/api/catalogosApi';
 import { Partido, Torneo } from '@/api/types';
@@ -24,6 +25,8 @@ import { Theme, sectionLabelStyle } from '@/constants/theme';
 
 export default function PartidosScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const esAdmin = user?.rol === 'ADMIN';
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [torneos, setTorneos] = useState<Torneo[]>([]);
   const [torneoId, setTorneoId] = useState<number | undefined>(undefined);
@@ -206,13 +209,15 @@ export default function PartidosScreen() {
         </View>
 
         {/* Botón CTA Nuevo Partido */}
-        <TouchableOpacity
-          style={styles.nuevoBtn}
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.nuevoBtnText}>+ PROGRAMAR PARTIDO</Text>
-        </TouchableOpacity>
+        {esAdmin && (
+          <TouchableOpacity
+            style={styles.nuevoBtn}
+            onPress={() => setModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.nuevoBtnText}>+ PROGRAMAR PARTIDO</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Lista de Partidos */}
@@ -317,7 +322,7 @@ export default function PartidosScreen() {
                         <Text style={styles.liveBtnText}>🔴 Ver / Operar en Vivo</Text>
                       </TouchableOpacity>
 
-                      {esProgramado && (
+                      {esProgramado && esAdmin && (
                         <TouchableOpacity
                           style={styles.cancelBtn}
                           onPress={() => handleEliminar(item)}
@@ -336,12 +341,14 @@ export default function PartidosScreen() {
       </View>
 
       {/* Modal Programación */}
-      <ProgramarPartidoModal
+      {esAdmin && (
+        <ProgramarPartidoModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSubmit={handleProgramar}
         torneoIdDefault={torneoId}
       />
+      )}
     </SafeAreaView>
   );
 }

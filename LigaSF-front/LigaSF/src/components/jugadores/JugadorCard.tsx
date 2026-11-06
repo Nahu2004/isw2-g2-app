@@ -7,6 +7,7 @@ import { Theme, sectionLabelStyle } from '@/constants/theme';
 import { Jugador } from '@/api/types';
 
 interface JugadorCardProps {
+  esAdmin?: boolean;
   jugador: Jugador;
   onEditar: (jugador: Jugador) => void;
   onToggleEstado: (jugador: Jugador) => void;
@@ -16,6 +17,7 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
   jugador,
   onEditar,
   onToggleEstado,
+  esAdmin = false,
 }) => {
   const activo = jugador.activo;
 
@@ -72,6 +74,7 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
         </View>
 
         {/* Botones de acción */}
+        {esAdmin && (
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[styles.btn, styles.btnSecondary]}
@@ -99,6 +102,7 @@ export const JugadorCard: React.FC<JugadorCardProps> = ({
             </Text>
           </TouchableOpacity>
         </View>
+        )}
       </View>
     </View>
   );

@@ -11,6 +11,7 @@ interface EquipoCardProps {
   onEditar: (equipo: Equipo) => void;
   onToggleEstado: (equipo: Equipo) => void;
   onVerJugadores?: (equipo: Equipo) => void;
+  esAdmin?: boolean;
 }
 
 export const EquipoCard: React.FC<EquipoCardProps> = ({
@@ -18,6 +19,7 @@ export const EquipoCard: React.FC<EquipoCardProps> = ({
   onEditar,
   onToggleEstado,
   onVerJugadores,
+  esAdmin,
 }) => {
   const activo = equipo.activo;
 
@@ -84,6 +86,7 @@ export const EquipoCard: React.FC<EquipoCardProps> = ({
             </TouchableOpacity>
           )}
 
+          {esAdmin && (
           <TouchableOpacity
             style={[styles.btn, styles.btnSecondary]}
             onPress={() => onEditar(equipo)}
@@ -91,7 +94,9 @@ export const EquipoCard: React.FC<EquipoCardProps> = ({
           >
             <Text style={styles.btnSecondaryText}>Editar</Text>
           </TouchableOpacity>
+          )}
 
+          {esAdmin && (
           <TouchableOpacity
             style={[
               styles.btn,
@@ -109,6 +114,7 @@ export const EquipoCard: React.FC<EquipoCardProps> = ({
               {activo ? 'Baja' : 'Reactivar'}
             </Text>
           </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>

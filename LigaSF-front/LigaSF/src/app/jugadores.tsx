@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 import {
   getJugadores,
   crearJugador,
@@ -28,6 +29,8 @@ import { Theme, sectionLabelStyle } from '@/constants/theme';
 
 export default function JugadoresScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const esAdmin = user?.rol === 'ADMIN';
   const params = useLocalSearchParams<{ equipoId?: string; nombreEquipo?: string }>();
 
   // Estados de datos
@@ -185,6 +188,7 @@ export default function JugadoresScreen() {
         />
 
         {/* Botón de creación */}
+        {esAdmin && (
         <TouchableOpacity
           style={styles.nuevoBtn}
           onPress={abrirModalCrear}
@@ -192,6 +196,7 @@ export default function JugadoresScreen() {
         >
           <Text style={styles.nuevoBtnText}>+ REGISTRAR JUGADOR</Text>
         </TouchableOpacity>
+        )}
       </View>
 
       {/* Lista de Jugadores */}
@@ -213,6 +218,7 @@ export default function JugadoresScreen() {
                 jugador={item}
                 onEditar={abrirModalEditar}
                 onToggleEstado={handleToggleEstado}
+                esAdmin={esAdmin}
               />
             )}
           />

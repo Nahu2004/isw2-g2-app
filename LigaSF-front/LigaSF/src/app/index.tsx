@@ -97,6 +97,7 @@ export default function HomeScreen() {
           icon: '🛡️',
           accent: '#60A5FA',
           requiereAuth: true,
+          soloAdmin: true,
         },
         {
           title: 'Jugadores',
@@ -105,6 +106,7 @@ export default function HomeScreen() {
           icon: '🏃',
           accent: '#4ADE80',
           requiereAuth: true,
+          soloAdmin: true,
         },
         {
           title: 'Catálogos Oficiales',
@@ -121,6 +123,7 @@ export default function HomeScreen() {
           icon: '🗓️',
           accent: '#C084FC',
           requiereAuth: true,
+          soloAdmin: true,
         },
         {
           title: 'Reglamento y Sanciones',

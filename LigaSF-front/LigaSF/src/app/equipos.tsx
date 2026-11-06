@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 import {
   getEquipos,
   crearEquipo,
@@ -28,6 +29,8 @@ import { Theme, sectionLabelStyle } from '@/constants/theme';
 
 export default function EquiposScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const esAdmin = user?.rol === 'ADMIN';
 
   // Estados de datos
   const [equipos, setEquipos] = useState<Equipo[]>([]);
@@ -185,6 +188,7 @@ export default function EquiposScreen() {
         />
 
         {/* Botón de creación */}
+        {esAdmin && (
         <TouchableOpacity
           style={styles.nuevoBtn}
           onPress={abrirModalCrear}
@@ -192,6 +196,7 @@ export default function EquiposScreen() {
         >
           <Text style={styles.nuevoBtnText}>+ NUEVO EQUIPO</Text>
         </TouchableOpacity>
+        )}
       </View>
 
       {/* Lista de Equipos con estados de carga */}
@@ -214,6 +219,7 @@ export default function EquiposScreen() {
                 onEditar={abrirModalEditar}
                 onToggleEstado={handleToggleEstado}
                 onVerJugadores={irAPlantel}
+                esAdmin={esAdmin}
               />
             )}
           />
